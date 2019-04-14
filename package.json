@@ -1,0 +1,35 @@
+{
+  "name": "leaflet-kmz",
+  "version": "0.0.1",
+  "description": "A KMZ file loader for Leaflet Maps",
+  "main": "/libs/KMZParser.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Raruto/leaflet-kmz.git"
+  },
+  "keywords": [
+    "leaflet",
+    "kmz",
+    "javascript",
+    "leaflet-and-kmz",
+    "jszip",
+    "togeojson",
+    "geojson-vt",
+    "mapbox"
+  ],
+  "author": "Raruto",
+  "license": "GPL-3.0",
+  "bugs": {
+    "url": "https://github.com/Raruto/leaflet-kmz/issues"
+  },
+  "homepage": "https://github.com/Raruto/leaflet-kmz#readme",
+  "peerDependencies": {
+    "geojson-vt": "^3.0.0",
+    "jszip": "^3.1.5",
+    "leaflet": "^1.3.4",
+    "togeojson": "^0.16.0"
+  }
+}
