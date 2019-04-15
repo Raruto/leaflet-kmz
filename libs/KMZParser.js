@@ -103,7 +103,7 @@ L.KMZLoader = L.Class.extend({
       } else if (feature.geometry.type === 'LineString') {
         layer.setStyle({
           weight: feature.properties["stroke-width"] * 1.05,
-          opacity: that.tiled ? 1 : feature.properties["stroke-opacity"],
+          opacity: that.tiled ? 0 : feature.properties["stroke-opacity"],
           color: feature.properties.stroke,
         });
       } else if (feature.geometry.type === 'Polygon') {

@@ -22,8 +22,8 @@ _For a working example see [demo](https://raruto.github.io/examples/leaflet-kmz/
     <!-- geojson-vt -->
     <script src="https://unpkg.com/geojson-vt@3.0.0/geojson-vt.js"></script>
     <!-- Leaflet-KMZ -->
-    <script src="https://raruto.github.io/cdn/leaflet-kmz/0.0.2/libs/KMZParser.js"></script>
-    <script src="https://raruto.github.io/cdn/leaflet-kmz/0.0.2/libs/GridLayer.GeoJSON.js"></script>
+    <script src="https://raruto.github.io/cdn/leaflet-kmz/0.0.3/libs/KMZParser.js"></script>
+    <script src="https://raruto.github.io/cdn/leaflet-kmz/0.0.3/libs/GridLayer.GeoJSON.js"></script>
     ...
     </head>
     ```
@@ -48,13 +48,14 @@ _For a working example see [demo](https://raruto.github.io/examples/leaflet-kmz/
       });
       OpenTopoMap.addTo(map);
 
+      // Instantiate KMZ parser (async)
       var kmzParser = new L.KMZParser({
         onKMZLoaded: function(layer, name) {
           control.addOverlay(layer, name);
           layer.addTo(map);
         }
       });
-
+      // Add remote KMZ files as layers (NB if they are 3rd-party servers, they MUST have CORS enabled)
       kmzParser.load('https://raruto.github.io/examples/leaflet-kmz/regioni.kmz');
       kmzParser.load('https://raruto.github.io/examples/leaflet-kmz/capitali.kmz');
       kmzParser.load('https://raruto.github.io/examples/leaflet-kmz/globe.kmz');
