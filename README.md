@@ -22,8 +22,8 @@ _For a working example see [demo](https://raruto.github.io/examples/leaflet-kmz/
     <!-- geojson-vt -->
     <script src="https://unpkg.com/geojson-vt@3.0.0/geojson-vt.js"></script>
     <!-- Leaflet-KMZ -->
-    <script src="https://raruto.github.io/cdn/leaflet-kmz/0.0.1/libs/KMZParser.js"></script>
-    <script src="https://raruto.github.io/cdn/leaflet-kmz/0.0.1/libs/GridLayer.GeoJSON.js"></script>
+    <script src="https://raruto.github.io/cdn/leaflet-kmz/0.0.2/libs/KMZParser.js"></script>
+    <script src="https://raruto.github.io/cdn/leaflet-kmz/0.0.2/libs/GridLayer.GeoJSON.js"></script>
     ...
     </head>
     ```
@@ -59,7 +59,7 @@ _For a working example see [demo](https://raruto.github.io/examples/leaflet-kmz/
       kmzParser.load('https://raruto.github.io/examples/leaflet-kmz/capitali.kmz');
       kmzParser.load('https://raruto.github.io/examples/leaflet-kmz/globe.kmz');
 
-      var control = L.control.layers(null, null).addTo(map);
+      var control = L.control.layers(null, null, { collapsed:false }).addTo(map);
     </script>
     ```
 
