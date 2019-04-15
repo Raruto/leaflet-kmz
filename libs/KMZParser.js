@@ -107,7 +107,6 @@ L.KMZLoader = L.Class.extend({
           color: feature.properties.stroke,
         });
       } else if (feature.geometry.type === 'Polygon') {
-        console.log(feature)
         layer.setStyle({
           weight: feature.properties["stroke-width"] * 1.05,
           opacity: that.tiled ? 0 : feature.properties["stroke-opacity"],

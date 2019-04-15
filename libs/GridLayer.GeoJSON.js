@@ -101,8 +101,6 @@ L.GridLayer.GeoJSON = L.GridLayer.extend({
 
     if (style.stroke) {
       ctx.lineWidth = this.setWeight(style.weight);
-      console.log(style);
-      console.log(feature);
       ctx.strokeStyle = this.setOpacity(style.stroke, style.opacity);
     } else {
       ctx.lineWidth = 0;
