@@ -165,13 +165,13 @@ L.GridLayer.GeoJSON = L.GridLayer.extend({
       sColor = sColorNew;
     }
     var sColorChange = [];
-    for (var i = 1; i < 7; i += 2) {
-      sColorChange.push(parseInt("0x" + sColor.slice(i, i + 2)));
+    for (var j = 1; j < 7; j += 2) {
+      sColorChange.push(parseInt("0x" + sColor.slice(j, j + 2)));
     }
     return sColorChange;
   }
 
-})
+});
 
 L.gridLayer.geoJson = function(geojson, options) {
   return new L.GridLayer.GeoJSON(geojson, options);

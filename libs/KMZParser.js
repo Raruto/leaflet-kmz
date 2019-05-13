@@ -89,8 +89,9 @@ L.KMZLoader = L.Class.extend({
     return function(feature, layer) {
       var name = feature.properties.name ? feature.properties.name : "";
       var desc = feature.properties.description ? feature.properties.description : "";
+      var type = feature.geometry.type ? feature.geometry.type : "";
 
-      if (feature.geometry.type === 'Point') {
+      if (type === 'Point') {
         var style = xmlDoc.querySelector(feature.properties.styleMapHash.normal);
         var iconHref = style.querySelector('Icon href').innerHTML;
         var width = 28;
@@ -100,21 +101,32 @@ L.KMZLoader = L.Class.extend({
           iconAnchor: [width / 2, height / 2],
           iconUrl: that.tiled ? that.emptyIcon : iconHref,
         }));
-      } else if (feature.geometry.type === 'LineString') {
-        layer.setStyle({
-          weight: feature.properties["stroke-width"] * 1.05,
-          opacity: that.tiled ? 0 : feature.properties["stroke-opacity"],
-          color: feature.properties.stroke,
-        });
-      } else if (feature.geometry.type === 'Polygon') {
-        layer.setStyle({
-          weight: feature.properties["stroke-width"] * 1.05,
-          opacity: that.tiled ? 0 : feature.properties["stroke-opacity"],
-          fillOpacity: that.tiled ? 0 : feature.properties["fill-opacity"],
-          color: feature.properties.stroke,
-        });
+      } else if (type === 'LineString' || type === 'Polygon' || type === 'GeometryCollection') {
+        var styles = {
+          weight: 1,
+          opacity: 0,
+          fillOpacity: 0,
+        };
+        if (!that.tiled) {
+          if (feature.properties["stroke-width"]) {
+            styles.weight = feature.properties["stroke-width"] * 1.05;
+          }
+          if (feature.properties["stroke-opacity"]) {
+            styles.opacity = feature.properties["stroke-opacity"];
+          }
+          if (feature.properties["fill-opacity"]) {
+            styles.fillOpacity = feature.properties["fill-opacity"];
+          }
+          if (feature.properties.stroke) {
+            styles.color = feature.properties.stroke;
+          }
+          if (feature.properties.fill) {
+            styles.fillColor = feature.properties.fill;
+          }
+        }
+        layer.setStyle(styles);
       } else {
-        console.warn('Unsupported feature type: ' + feature.geometry.type);
+        console.warn('Unsupported feature type: ' + type);
         console.warn(feature);
       }
       layer.bindPopup('<div style="width:300px">' + '<b>' + name + '</b>' + '<br>' + desc + '</div>');
