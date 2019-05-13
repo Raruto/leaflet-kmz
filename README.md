@@ -1,7 +1,7 @@
 # leaflet-kmz
 A KMZ file loader for Leaflet Maps
 
-_For a working example see one of the following demos: [#1](https://raruto.github.io/examples/leaflet-kmz/leaflet-kmz.html), [#2](https://raruto.github.io/examples/leaflet-kmz/leaflet-kmz_multigeometry.html)_
+_For a working example see [demo](https://raruto.github.io/examples/leaflet-kmz/leaflet-kmz.html)_
 
 ---
 
@@ -56,8 +56,8 @@ _For a working example see one of the following demos: [#1](https://raruto.githu
         }
       });
       // Add remote KMZ files as layers (NB if they are 3rd-party servers, they MUST have CORS enabled)
-      kmzParser.load('https://raruto.github.io/examples/leaflet-kmz/regioni.kmz');
-      kmzParser.load('https://raruto.github.io/examples/leaflet-kmz/capitali.kmz');
+      kmzParser.load('https://raruto.github.io/examples/leaflet-kmz/regions.kmz');
+      kmzParser.load('https://raruto.github.io/examples/leaflet-kmz/capitals.kmz');
       kmzParser.load('https://raruto.github.io/examples/leaflet-kmz/globe.kmz');
 
       var control = L.control.layers(null, null, { collapsed:false }).addTo(map);
