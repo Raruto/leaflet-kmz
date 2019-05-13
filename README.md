@@ -22,8 +22,8 @@ _For a working example see one of the following demos: [#1](https://raruto.githu
     <!-- geojson-vt -->
     <script src="https://unpkg.com/geojson-vt@3.0.0/geojson-vt.js"></script>
     <!-- Leaflet-KMZ -->
-    <script src="https://raruto.github.io/cdn/leaflet-kmz/0.0.3/libs/KMZParser.js"></script>
-    <script src="https://raruto.github.io/cdn/leaflet-kmz/0.0.3/libs/GridLayer.GeoJSON.js"></script>
+    <script src="https://unpkg.com/leaflet-kmz@0.0.4/libs/KMZParser.js"></script>
+    <script src="https://unpkg.com/leaflet-kmz@0.0.4/libs/GridLayer.GeoJSON.js"></script>
     ...
     </head>
     ```
