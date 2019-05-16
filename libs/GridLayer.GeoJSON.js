@@ -11,6 +11,8 @@ L.GridLayer.GeoJSON = L.GridLayer.extend({
     maxZoom: 24,
     tolerance: 3,
     debug: 0,
+    extent: 4096,
+    buffer: 256,
     icon: {
       width: 28,
       height: 28
