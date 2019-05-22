@@ -38,21 +38,21 @@ L.GridLayer.GeoJSON = L.GridLayer.extend({
     var features = tileInfo ? tileInfo.features : [];
     for (var i = 0; i < features.length; i++) {
       var feature = features[i];
-      this.drawFeature(ctx, feature);
+      this._drawFeature(ctx, feature);
     }
     return tile;
   },
 
-  drawFeature: function(ctx, feature) {
+  _drawFeature: function(ctx, feature) {
     ctx.beginPath();
-    this.setStyle(ctx, feature);
+    this._setStyle(ctx, feature);
 
     if (feature.type === 1) {
-      this.drawIcon(ctx, feature);
+      this._drawIcon(ctx, feature);
     } else if (feature.type === 2) {
-      this.drawLine(ctx, feature);
+      this._drawLine(ctx, feature);
     } else if (feature.type === 3) {
-      this.drawPolygon(ctx, feature);
+      this._drawPolygon(ctx, feature);
     } else {
       console.warn('Unsupported feature type: ' + feature.geometry.type, feature);
     }
@@ -60,7 +60,7 @@ L.GridLayer.GeoJSON = L.GridLayer.extend({
     ctx.stroke();
   },
 
-  drawIcon: function(ctx, feature) {
+  _drawIcon: function(ctx, feature) {
     var icon = new Image(),
       styleMapHash = this.xmlDoc.querySelector(feature.tags.styleMapHash.normal),
       iconHref = styleMapHash.querySelector('Icon href').innerHTML,
@@ -73,7 +73,7 @@ L.GridLayer.GeoJSON = L.GridLayer.extend({
     icon.src = iconHref;
   },
 
-  drawLine: function(ctx, feature) {
+  _drawLine: function(ctx, feature) {
     for (var j = 0; j < feature.geometry.length; j++) {
       var ring = feature.geometry[j];
       for (var k = 0; k < ring.length; k++) {
@@ -84,60 +84,60 @@ L.GridLayer.GeoJSON = L.GridLayer.extend({
     }
   },
 
-  drawPolygon: function(ctx, feature) {
-    this.drawLine(ctx, feature);
+  _drawPolygon: function(ctx, feature) {
+    this._drawLine(ctx, feature);
     ctx.fill('evenodd');
   },
 
-  setStyle: function(ctx, feature) {
+  _setStyle: function(ctx, feature) {
 
     var style = {};
 
     if (feature.type === 1) {
-      style = this.setPointStyle(feature, style);
+      style = this._setPointStyle(feature, style);
     } else if (feature.type === 2) {
-      style = this.setLineStyle(feature, style);
+      style = this._setLineStyle(feature, style);
     } else if (feature.type === 3) {
-      style = this.setPolygonStyle(feature, style);
+      style = this._setPolygonStyle(feature, style);
     }
 
     if (style.stroke) {
-      ctx.lineWidth = this.setWeight(style.weight);
-      ctx.strokeStyle = this.setOpacity(style.stroke, style.opacity);
+      ctx.lineWidth = this._setWeight(style.weight);
+      ctx.strokeStyle = this._setOpacity(style.stroke, style.opacity);
     } else {
       ctx.lineWidth = 0;
       ctx.strokeStyle = {};
     }
     if (style.fill) {
-      ctx.fillStyle = this.setOpacity(style.fill, style.fillOpacity);
+      ctx.fillStyle = this._setOpacity(style.fill, style.fillOpacity);
     } else {
       ctx.fillStyle = {};
     }
   },
 
-  setPointStyle: function(feature, style) {
+  _setPointStyle: function(feature, style) {
     return style;
   },
 
-  setLineStyle: function(feature, style) {
+  _setLineStyle: function(feature, style) {
     style.weight = feature.tags["stroke-width"] * 1.05;
     style.opacity = feature.tags["stroke-opacity"];
     style.stroke = feature.tags.stroke;
     return style;
   },
 
-  setPolygonStyle: function(feature, style) {
-    style = this.setLineStyle(feature, style);
+  _setPolygonStyle: function(feature, style) {
+    style = this._setLineStyle(feature, style);
     style.fill = feature.tags.fill;
     style.fillOpacity = feature.tags["fill-opacity"];
     return style;
   },
 
-  setWeight: function(weight) {
+  _setWeight: function(weight) {
     return weight || 5;
   },
 
-  setOpacity: function(color, opacity) {
+  _setOpacity: function(color, opacity) {
     color = color || '#f00';
     if (opacity) {
       if (this._iscolorHex(color)) {
