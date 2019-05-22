@@ -62,16 +62,16 @@ L.KMZLoader = L.Class.extend({
       onEachFeature: this._onEachFeature(xmlDoc),
     });
 
-    var layer = this.geojson;
+    this.layer = this.geojson;
     if (this.tiled) {
-      this.geojsongrid = L.gridLayer.geoJson(data, {
+      this.gridlayer = L.gridLayer.geoJson(data, {
         xmlDoc: xmlDoc
       });
-      layer = L.layerGroup([this.geojsongrid, this.geojson]);
+      this.layer = L.featureGroup([this.gridlayer, this.geojson]);
     }
 
     if (this.callback) {
-      this.callback(layer, this.name);
+      this.callback(this.layer, this.name);
     }
   },
 
@@ -288,5 +288,9 @@ L.KMZParser = L.Class.extend({
     var kmzLoader = new L.KMZLoader(this.opts);
     kmzLoader.parse(kmzUrl);
     this.loaders.push(kmzLoader);
+  },
+
+  get: function(i) {
+    return i < this.loaders.length ? this.loaders[i] : false;
   },
 });
