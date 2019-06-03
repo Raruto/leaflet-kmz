@@ -1,8 +1,13 @@
 /*jshint esversion: 6 */
 
 L.KMZLoader = L.Class.extend({
+  options: {
+    bindPopup: true,
+    bindTooltip: true,
+  },
 
   initialize: function(opts) {
+    L.setOptions(this, opts);
     this.name = opts.name;
     this.tiled = 'geojsonvt' in window;
     this.emptyIcon = 'data:image/png;base64,' + "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAFElEQVR4XgXAAQ0AAABAMP1L30IDCPwC/o5WcS4AAAAASUVORK5CYII=";
@@ -129,7 +134,17 @@ L.KMZLoader = L.Class.extend({
         console.warn('Unsupported feature type: ' + type);
         console.warn(feature);
       }
-      layer.bindPopup('<div style="width:300px">' + '<b>' + name + '</b>' + '<br>' + desc + '</div>');
+      if (name || desc) {
+        if (that.options.bindPopup) {
+          layer.bindPopup('<div>' + '<b>' + name + '</b>' + '<br>' + desc + '</div>');
+        }
+        if (that.options.bindTooltip) {
+          layer.bindTooltip('<b>' + name + '</b>', {
+            direction: 'auto',
+            sticky: true,
+          });
+        }
+      }
     };
   },
 
