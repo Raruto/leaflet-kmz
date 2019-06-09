@@ -25,7 +25,18 @@ L.KMZLoader = L.Class.extend({
       if (err != null) {
         console.error(kmzUrl, err, data);
       } else {
-        that._parseKMZ(data);
+        var P = new Uint8Array(data, 0, 1);   // offset, length
+        var K = new Uint8Array(data, 1, 1);
+        var PK = String.fromCharCode(P,K);
+        var zipped = ('PK' === PK);
+        if (zipped) that._parseKMZ(data);
+          else {
+          var shortList = [[
+            'doc.kml',
+            String.fromCharCode.apply(null, new Uint8Array(data))
+          ]];
+          that._parseKML(shortList);
+        }
       }
     });
   },

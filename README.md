@@ -64,9 +64,11 @@ _For a working example see [demo](https://raruto.github.io/examples/leaflet-kmz/
     </script>
     ```
 
-_**NB** to be able to use Google files (eg. Google My Maps) you **MUST** use a valid third-party kml proxy server._
-
 ---
+
+**Notes:**
+- to be able to use Google files (eg. Google My Maps) you **MUST** use a valid third-party kml proxy server
+- the plugin will identify and process both zipped (kmz) or unzipped (kml) files
 
 **Compatibile with:** leaflet@1.3.4, jszip@3.1.5, togeojson@0.16.0, geojson-vt@3.0.0
 
