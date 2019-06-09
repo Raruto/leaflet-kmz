@@ -7,22 +7,29 @@
  */
 L.GridLayer.GeoJSON = L.GridLayer.extend({
   options: {
-    async: false,
     maxZoom: 24,
     tolerance: 3,
-    debug: 0,
     extent: 4096,
     buffer: 256,
+    debug: 0,
+
+    async: false,
     icon: {
       width: 28,
       height: 28
     },
+    styles: {
+      lineWidth: 1,
+      lineColor: '#ffffff',
+      lineOpacity: 1.0,
+      fillColor: '#000000',
+      fillOpacity: 0.25
+    }
   },
 
   initialize: function(geojson, options) {
     L.setOptions(this, options);
     L.GridLayer.prototype.initialize.call(this, options);
-    this.xmlDoc = options.xmlDoc;
     this.tileIndex = geojsonvt(geojson, this.options);
   },
 
@@ -62,15 +69,13 @@ L.GridLayer.GeoJSON = L.GridLayer.extend({
 
   _drawIcon: function(ctx, feature) {
     var icon = new Image(),
-      styleMapHash = this.xmlDoc.querySelector(feature.tags.styleMapHash.normal),
-      iconHref = styleMapHash.querySelector('Icon href').innerHTML,
-      p = feature.geometry[0],
-      width = this.options.icon.width,
-      height = this.options.icon.height;
+    p = feature.geometry[0],
+    width = this.options.icon.width,
+    height = this.options.icon.height;
     icon.onload = function() {
       ctx.drawImage(icon, (p[0] / 16.0) - (width / 2.0), (p[1] / 16.0) - (height / 2.0), width, height);
     };
-    icon.src = iconHref;
+    icon.src = feature.tags.icon ? feature.tags.icon : null;
   },
 
   _drawLine: function(ctx, feature) {
@@ -120,16 +125,16 @@ L.GridLayer.GeoJSON = L.GridLayer.extend({
   },
 
   _setLineStyle: function(feature, style) {
-    style.weight = feature.tags["stroke-width"] * 1.05;
-    style.opacity = feature.tags["stroke-opacity"];
-    style.stroke = feature.tags.stroke;
+    style.weight  = feature.tags["stroke-width"]   ? feature.tags["stroke-width"] * 1.05 : (this.options.styles.lineWidth * 1.05);
+    style.opacity = feature.tags["stroke-opacity"] ? feature.tags["stroke-opacity"]      :  this.options.styles.lineOpacity;
+    style.stroke  = feature.tags.stroke            ? feature.tags.stroke                 :  this.options.styles.lineColor;
     return style;
   },
 
   _setPolygonStyle: function(feature, style) {
     style = this._setLineStyle(feature, style);
-    style.fill = feature.tags.fill;
-    style.fillOpacity = feature.tags["fill-opacity"];
+    style.fill        = feature.tags.fill            ? feature.tags.fill            : this.options.styles.fillColor;
+    style.fillOpacity = feature.tags["fill-opacity"] ? feature.tags["fill-opacity"] : this.options.styles.fillOpacity;
     return style;
   },
 

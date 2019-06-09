@@ -73,16 +73,16 @@ L.KMZLoader = L.Class.extend({
     var xmlDoc = (new DOMParser()).parseFromString(text, 'text/xml');
     var data = toGeoJSON.kml(xmlDoc);
 
+    // set up the default layer: the additional fast draw layer is only used if geojsonvt is loaded
     this.geojson = L.geoJson(data, {
       pointToLayer: this._pointToLayer,
-      onEachFeature: this._onEachFeature(xmlDoc),
+      onEachFeature: this._onEachFeature(),
     });
 
     this.layer = this.geojson;
     if (this.tiled) {
-      this.gridlayer = L.gridLayer.geoJson(data, {
-        xmlDoc: xmlDoc
-      });
+      // geojsonvt is loaded, so set up the fast draw layer
+      this.gridlayer = L.gridLayer.geoJson(data);
       this.layer = L.featureGroup([this.gridlayer, this.geojson]);
     }
 
@@ -99,17 +99,15 @@ L.KMZLoader = L.Class.extend({
     });
   },
 
-  _onEachFeature: function(xmlDoc) {
+  _onEachFeature: function() {
     var that = this;
-    // Closure for xmlDoc
     return function(feature, layer) {
       var name = feature.properties.name ? feature.properties.name : "";
       var desc = feature.properties.description ? feature.properties.description : "";
       var type = feature.geometry.type ? feature.geometry.type : "";
 
       if (type === 'Point') {
-        var style = xmlDoc.querySelector(feature.properties.styleMapHash.normal);
-        var iconHref = style.querySelector('Icon href').innerHTML;
+        var iconHref = feature.properties.icon ? feature.properties.icon : that.emptyIcon;
         var width = 28;
         var height = 28;
         layer.setIcon(L.icon({
