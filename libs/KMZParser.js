@@ -75,8 +75,9 @@ L.KMZLoader = L.Class.extend({
 
     // set up the default layer: the additional fast draw layer is only used if geojsonvt is loaded
     this.geojson = L.geoJson(data, {
+      filter: this._filter(),   // closure in use
       pointToLayer: this._pointToLayer,
-      onEachFeature: this._onEachFeature(),
+      onEachFeature: this._onEachFeature(),   // closure in use
     });
 
     this.layer = this.geojson;
@@ -91,6 +92,34 @@ L.KMZLoader = L.Class.extend({
     }
   },
 
+  _popupTooltip: function(feature, layer) {
+    var that = this;
+    var name = feature.properties.name ? feature.properties.name : '';
+    var desc = feature.properties.description ? feature.properties.description : '';
+    if (name || desc) {
+      if (that.options.bindPopup) {
+        layer.bindPopup('<div>' + '<b>' + name + '</b>' + '<br/>' + desc + '</div>', {maxWidth: 'auto'});
+      }
+      if (that.options.bindTooltip) {
+        layer.bindTooltip('<b>' + name + '</b>', {
+          direction: 'auto',
+          sticky: true,
+        });
+      }
+    }
+  },
+
+  _filter: function() {
+    var that = this;
+    // closure for tiled
+    return function(feature) {
+      if (!that.tiled) return true;
+      // everything besides points are drawn by L.GridLayer.GeoJSON
+      if (feature.geometry.type === 'Point') return true;
+      return false;
+    };
+  },
+
   _pointToLayer: function(feature, latlng) {
     return new L.marker(latlng, {
       icon: L.icon({
@@ -101,58 +130,64 @@ L.KMZLoader = L.Class.extend({
 
   _onEachFeature: function() {
     var that = this;
+    // closure for tiled
     return function(feature, layer) {
-      var name = feature.properties.name ? feature.properties.name : "";
-      var desc = feature.properties.description ? feature.properties.description : "";
-      var type = feature.geometry.type ? feature.geometry.type : "";
+    var type = feature.geometry.type ? feature.geometry.type : "";
 
+    if (that.tiled) {  // using fast draw
       if (type === 'Point') {
-        var iconHref = feature.properties.icon ? feature.properties.icon : that.emptyIcon;
         var width = 28;
         var height = 28;
         layer.setIcon(L.icon({
           iconSize: [width, height],
           iconAnchor: [width / 2, height / 2],
-          iconUrl: that.tiled ? that.emptyIcon : iconHref,
+
+          // if the icons are being drawn on the fast draw layer (ie tiled = true) then
+          // place empty icons on the default layer to capture mouse events
+          iconUrl: that.emptyIcon,
         }));
-      } else if (type === 'LineString' || type === 'Polygon' || type === 'GeometryCollection') {
-        var styles = {
-          weight: 1,
-          opacity: 0,
-          fillOpacity: 0,
-        };
-        if (!that.tiled) {
-          if (feature.properties["stroke-width"]) {
-            styles.weight = feature.properties["stroke-width"] * 1.05;
-          }
-          if (feature.properties["stroke-opacity"]) {
-            styles.opacity = feature.properties["stroke-opacity"];
-          }
-          if (feature.properties["fill-opacity"]) {
-            styles.fillOpacity = feature.properties["fill-opacity"];
-          }
-          if (feature.properties.stroke) {
-            styles.color = feature.properties.stroke;
-          }
-          if (feature.properties.fill) {
-            styles.fillColor = feature.properties.fill;
-          }
+
+        that._popupTooltip(feature, layer);
+
+        } else if (type === 'LineString' || type === 'Polygon' || type === 'GeometryCollection') {
+          // do nothing here: the lines are drawn by L.GridLayer.GeoJSON
+          // popups or tooltips are not allowed here, as we may want to handle thousands of lines here
         }
-        layer.setStyle(styles);
-      } else {
-        console.warn('Unsupported feature type: ' + type);
-        console.warn(feature);
-      }
-      if (name || desc) {
-        if (that.options.bindPopup) {
-          layer.bindPopup('<div>' + '<b>' + name + '</b>' + '<br>' + desc + '</div>');
+        else {
+          console.warn('Unsupported feature type: ' + type);
+          console.warn(feature);
         }
-        if (that.options.bindTooltip) {
-          layer.bindTooltip('<b>' + name + '</b>', {
-            direction: 'auto',
-            sticky: true,
-          });
+    }
+    else // not using fast draw
+    {
+      if (type === 'Point') {
+        var width = 28;
+        var height = 28;
+        layer.setIcon(L.icon({
+          iconSize: [width, height],
+          iconAnchor: [width / 2, height / 2],
+          iconUrl: (feature.properties.icon ? feature.properties.icon : that.emptyIcon),
+        }));
+        } else if (type === 'LineString' || type === 'Polygon' || type === 'GeometryCollection') {
+          var styles = {
+            weight: 1,
+            opacity: 0,
+            fillOpacity: 0,
+          };
+
+          if (feature.properties["stroke-width"])   styles.weight      = feature.properties["stroke-width"] * 1.05;
+          if (feature.properties["stroke-opacity"]) styles.opacity     = feature.properties["stroke-opacity"];
+          if (feature.properties["fill-opacity"])   styles.fillOpacity = feature.properties["fill-opacity"];
+          if (feature.properties.stroke)            styles.color       = feature.properties.stroke;
+          if (feature.properties.fill)              styles.fillColor   = feature.properties.fill;
+
+          layer.setStyle(styles);
+        } else {
+          console.warn('Unsupported feature type: ' + type);
+          console.warn(feature);
         }
+        // all feature types can have a popup or tooltip
+        that._popupTooltip(feature, layer);
       }
     };
   },
