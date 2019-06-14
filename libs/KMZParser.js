@@ -2,16 +2,20 @@
 
 L.KMZLoader = L.Class.extend({
   options: {
+    useFastDraw: true,
     bindPopup: true,
     bindTooltip: true,
   },
 
-  initialize: function(opts) {
-    L.setOptions(this, opts);
-    this.name = opts.name;
-    this.tiled = 'geojsonvt' in window;
-    this.emptyIcon = 'data:image/png;base64,' + "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAFElEQVR4XgXAAQ0AAABAMP1L30IDCPwC/o5WcS4AAAAASUVORK5CYII=";
-    this.callback = opts.onKMZLoaded;
+  initialize: function(optionsMain, optionsKML) {
+    // Any new variables passed in will be created and merged into the options. Any existing option variables
+    // are updated with the new values passed in. The identifier "options" seems to act like a keyword?
+    L.setOptions(this, optionsMain);
+    L.setOptions(this, optionsKML);
+    this.useFastDraw = this.options.useFastDraw;
+    this.name = this.options.name;
+    this.callback = this.options.onKMZLoaded;
+    if ((this.useFastDraw) && !('geojsonvt' in window)) { console.log('geojson-vt not loaded. Fast draw not possible'); }
   },
 
   parse: function(kmzUrl) {
@@ -70,31 +74,38 @@ L.KMZLoader = L.Class.extend({
   },
 
   _toGeoJSON: function(text) {
+
     var xmlDoc = (new DOMParser()).parseFromString(text, 'text/xml');
     var data = toGeoJSON.kml(xmlDoc);
 
+    if (data.features.length == 0) {console.log('KMZ/KML file: "'+this.name+'" probably not found or conversion to geoJson failed');}
+    console.log('Number of features: '+data.features.length);
+
     var geoJsonOptions = {};
-    if (this.tiled) {
-      geoJsonOptions = {
-        filter: this._filter,  // filter out everything except placemarks
-        pointToLayer: this._pointToLayer,
-        onEachFeature: this._onEachFeatureFastDraw(),   // closure in use
-      }
+    if (this.useFastDraw) {
+      console.log('Using fast draw via geojson-vt');
     } else {
+      console.log('Using slow draw');
       geoJsonOptions = {
-        pointToLayer: this._pointToLayer,
         onEachFeature: this._onEachFeatureSlowDraw(),   // closure in use
       }
     }
 
-    // set up the default layer: the additional fast draw layer is only used if geojsonvt is loaded
-    this.geojson = L.geoJson(data, geoJsonOptions);
-
-    this.layer = this.geojson;
-    if (this.tiled) {
-      // geojsonvt is loaded, so set up the fast draw layer
-      this.gridlayer = L.gridLayer.geoJson(data);
-      this.layer = L.featureGroup([this.gridlayer, this.geojson]);
+    this.geoJsonLayer = L.geoJson(data, geoJsonOptions);
+    if (this.useFastDraw) { // use fast method
+      // To the fast draw geojson-vt layer, we also attach a corresponding L.geoJson layer.
+      // The L.geoJson layer is NEVER DRAWN but it can still provide all the geoJson information in use.
+      // Also it still provides the usual L.geoJson layer functionality such as getBounds() etc.
+      // However, because the layer is not added to the map, there are no click functions activated in useFastDraw mode.
+      // Any clicks have to be handled manually. For example, you can use the leaflet-pip plugin for polygons.
+      L.GridLayer.GeoJSON.include({
+        dummyLayer: this.geoJsonLayer,
+      });
+      // fast draw layer with geoJson layer attached: both contain identical geojson data
+      this.layer = L.gridLayer.geoJson(data);
+    }
+    else { // use slow method: just return a normal L.geoJson layer
+      this.layer = this.geoJsonLayer;
     }
 
     if (this.callback) {
@@ -108,8 +119,8 @@ L.KMZLoader = L.Class.extend({
     var desc = feature.properties.description ? feature.properties.description : '';
     if (name || desc) {
       if (that.options.bindPopup) {
-        layer.bindPopup('<div>' + '<b>' + name + '</b>' + '<br/>' + desc + '</div>', {maxWidth: 'auto'});
-      }
+        layer.bindPopup('<div>' + '<b>' + name + '</b>' + '<br/>' + desc + '</div>');
+     }
       if (that.options.bindTooltip) {
         layer.bindTooltip('<b>' + name + '</b>', {
           direction: 'auto',
@@ -119,66 +130,21 @@ L.KMZLoader = L.Class.extend({
     }
   },
 
-  _filter: function(feature) {
-    // everything besides points are drawn by L.GridLayer.GeoJSON
-    if (feature.geometry.type === 'Point') return true;
-    return false;
-  },
-
-  _pointToLayer: function(feature, latlng) {
-    return new L.marker(latlng, {
-      icon: L.icon({
-        iconUrl: this.emptyIcon,
-      }),
-    });
-  },
-
-  // using fast draw
-  _onEachFeatureFastDraw: function() {
-    var that = this;
-    // closure for tiled
-    return function(feature, layer) {
-    var type = feature.geometry.type ? feature.geometry.type : "";
-
-    if (type === 'Point') {
-      var width = 28;
-      var height = 28;
-      layer.setIcon(L.icon({
-        iconSize: [width, height],
-        iconAnchor: [width / 2, height / 2],
-
-        // if the icons are being drawn on the fast draw layer (ie tiled = true) then
-        // place empty icons on the default layer to capture mouse events
-        iconUrl: that.emptyIcon,
-      }));
-
-      that._popupTooltip(feature, layer);
-
-      } else if (type === 'LineString' || type === 'Polygon' || type === 'GeometryCollection') {
-        // do nothing here: the lines are drawn by L.GridLayer.GeoJSON
-        // popups or tooltips are not allowed here, as we may want to handle thousands of lines here
-      }
-      else {
-        console.warn('Unsupported feature type: ' + type);
-        console.warn(feature);
-      }
-    };
-  },
-
-  // not using fast draw
+  // not using fast draw. fast draw uses the draw functions in L.GridLayer.GeoJSON
   _onEachFeatureSlowDraw: function() {
     var that = this;
-    // closure for tiled
+    // closure for options
     return function(feature, layer) {
-      var type = feature.geometry.type ? feature.geometry.type : "";
+      var type = feature.geometry.type ? feature.geometry.type : '';
 
       if (type === 'Point') {
+        var emptyIcon = 'data:image/png;base64,' + "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAFElEQVR4XgXAAQ0AAABAMP1L30IDCPwC/o5WcS4AAAAASUVORK5CYII=";
         var width = 28;
         var height = 28;
         layer.setIcon(L.icon({
           iconSize: [width, height],
           iconAnchor: [width / 2, height / 2],
-          iconUrl: (feature.properties.icon ? feature.properties.icon : that.emptyIcon),
+          iconUrl: (feature.properties.icon ? feature.properties.icon : emptyIcon),
         }));
       } else if (type === 'LineString' || type === 'Polygon' || type === 'GeometryCollection') {
         var styles = {
@@ -344,18 +310,21 @@ L.KMZLoader = L.Class.extend({
     };
     reader.readAsDataURL(blob);
   },
-
 });
 
+// master class that handles the construction and invocation of the kml loaders array
 L.KMZParser = L.Class.extend({
-
-  initialize: function(opts) {
-    this.loaders = [];
-    this.opts = opts;
+  options: {
+    onKMZLoaded: null
   },
 
-  load: function(kmzUrl) {
-    var kmzLoader = new L.KMZLoader(this.opts);
+  initialize: function(optionsMain) {
+    this.loaders = [];
+    L.Util.setOptions(this, optionsMain);
+  },
+
+  load: function(kmzUrl, optionsKML) {
+    var kmzLoader = new L.KMZLoader(this.options, optionsKML);
     kmzLoader.parse(kmzUrl);
     this.loaders.push(kmzLoader);
   },
