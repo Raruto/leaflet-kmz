@@ -2,14 +2,18 @@
 
 L.KMZLoader = L.Class.extend({
   options: {
+    tiled: true,
+    interactive: true,
     bindPopup: true,
     bindTooltip: true,
+    debug: 0,
   },
 
   initialize: function(opts) {
     L.setOptions(this, opts);
-    this.name = opts.name;
-    this.tiled = 'geojsonvt' in window;
+    this.name = this.options.name;
+    this.tiled = 'geojsonvt' in window && this.options.tiled;
+    this.interactive = this.options.interactive;
     this.emptyIcon = 'data:image/png;base64,' + "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAFElEQVR4XgXAAQ0AAABAMP1L30IDCPwC/o5WcS4AAAAASUVORK5CYII=";
     this.callback = opts.onKMZLoaded;
   },
@@ -21,10 +25,8 @@ L.KMZLoader = L.Class.extend({
 
   _load: function(url) {
     this._getBinaryContent(url, function(err, data) {
-      if (err != null)
-        console.error(url, err, data);
-      else
-        this._parse(data);
+      if (err != null) console.error(url, err, data);
+      else this._parse(data);
     }.bind(this));
   },
 
@@ -81,20 +83,21 @@ L.KMZLoader = L.Class.extend({
   _kmlToLayer: function(xmlDoc) {
     var data = this._toGeoJSON(xmlDoc);
 
-    this.geojson = L.geoJson(data, {
-      pointToLayer: this._pointToLayer.bind(this),
-      onEachFeature: this._onEachFeature.bind(this),
-    });
-
-    this.layer = this.geojson;
+    if (this.interactive) {
+      this.geojson = L.geoJson(data, {
+        pointToLayer: this._pointToLayer.bind(this),
+        onEachFeature: this._onEachFeature.bind(this),
+      });
+      this.layer = this.geojson;
+    }
 
     if (this.tiled) {
       this.gridlayer = L.gridLayer.geoJson(data);
-      this.layer = L.featureGroup([this.gridlayer, this.geojson]);
+      this.layer = this.interactive ? L.featureGroup([this.gridlayer, this.geojson]) : this.gridlayer;
     }
 
-    if (this.callback) {
-      this.callback(this.layer, this.name);
+    if (this.layer) {
+      this._onKMZLoaded(this.layer, this.name);
     }
   },
 
@@ -117,11 +120,15 @@ L.KMZLoader = L.Class.extend({
         this._setLayerStyle(feature, layer);
         break;
       default:
-        console.warn('Unsupported feature type: ' + feature.geometry.type);
-        console.warn(feature);
+        console.warn('Unsupported feature type: ' + feature.geometry.type, feature);
         break;
     }
     this._setLayerBalloon(feature, layer);
+  },
+
+  _onKMZLoaded: function(layer, name) {
+    if (this.options.debug) console.log(layer, name);
+    if (this.callback) this.callback(layer, name);
   },
 
   _setLayerPointIcon: function(feature, layer) {
@@ -163,15 +170,17 @@ L.KMZLoader = L.Class.extend({
   _setLayerBalloon: function(feature, layer) {
     var name = feature.properties.name ? feature.properties.name : "";
     var desc = feature.properties.description ? feature.properties.description : "";
-    if (!name && !desc) return;
-    if (this.options.bindPopup) {
-      layer.bindPopup('<div>' + '<b>' + name + '</b>' + '<br>' + desc + '</div>');
-    }
-    if (this.options.bindTooltip) {
-      layer.bindTooltip('<b>' + name + '</b>', {
-        direction: 'auto',
-        sticky: true,
-      });
+
+    if (name || desc) {
+      if (this.options.bindPopup) {
+        layer.bindPopup('<div>' + '<b>' + name + '</b>' + '<br>' + desc + '</div>');
+      }
+      if (this.options.bindTooltip) {
+        layer.bindTooltip('<b>' + name + '</b>', {
+          direction: 'auto',
+          sticky: true,
+        });
+      }
     }
   },
 
@@ -328,12 +337,12 @@ L.KMZLoader = L.Class.extend({
 L.KMZParser = L.Class.extend({
 
   initialize: function(opts) {
+    L.setOptions(this, opts);
     this.loaders = [];
-    this.opts = opts;
   },
 
-  load: function(kmzUrl) {
-    var kmzLoader = new L.KMZLoader(this.opts);
+  load: function(kmzUrl, opts) {
+    var kmzLoader = new L.KMZLoader(L.extend({}, this.options, opts));
     kmzLoader.parse(kmzUrl);
     this.loaders.push(kmzLoader);
   },

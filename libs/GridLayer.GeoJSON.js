@@ -19,7 +19,7 @@ L.GridLayer.GeoJSON = L.GridLayer.extend({
     },
     styles: {
       strokeWidth: 1,
-      strokeColor: '#FFF',
+      strokeColor: '#f00',
       strokeOpacity: 1.0,
       fillColor: '#000',
       fillOpacity: 0.25
@@ -30,6 +30,7 @@ L.GridLayer.GeoJSON = L.GridLayer.extend({
     L.setOptions(this, options);
     L.GridLayer.prototype.initialize.call(this, options);
     this.tileIndex = geojsonvt(geojson, this.options);
+    this.geojson = geojson; // eg. saved for advanced "leaflet-pip" mouse/click integrations
   },
 
   createTile: function(coords) {
@@ -43,8 +44,7 @@ L.GridLayer.GeoJSON = L.GridLayer.extend({
     var tileInfo = this.tileIndex.getTile(coords.z, coords.x, coords.y);
     var features = tileInfo ? tileInfo.features : [];
     for (var i = 0; i < features.length; i++) {
-      var feature = features[i];
-      this._drawFeature(ctx, feature);
+      this._drawFeature(ctx, features[i]);
     }
     return tile;
   },
@@ -53,15 +53,10 @@ L.GridLayer.GeoJSON = L.GridLayer.extend({
     ctx.beginPath();
     this._setStyle(ctx, feature);
 
-    if (feature.type === 1) {
-      this._drawIcon(ctx, feature);
-    } else if (feature.type === 2) {
-      this._drawLine(ctx, feature);
-    } else if (feature.type === 3) {
-      this._drawPolygon(ctx, feature);
-    } else {
-      console.warn('Unsupported feature type: ' + feature.geometry.type, feature);
-    }
+    if (feature.type === 1) this._drawIcon(ctx, feature);
+    else if (feature.type === 2) this._drawLine(ctx, feature);
+    else if (feature.type === 3) this._drawPolygon(ctx, feature);
+    else console.warn('Unsupported feature type: ' + feature.geometry.type, feature);
 
     ctx.stroke();
   },
@@ -94,21 +89,15 @@ L.GridLayer.GeoJSON = L.GridLayer.extend({
   },
 
   _setStyle: function(ctx, feature) {
-
     var style = {};
 
-    if (feature.type === 1) {
-      style = this._setPointStyle(feature, style);
-    } else if (feature.type === 2) {
-      style = this._setLineStyle(feature, style);
-    } else if (feature.type === 3) {
-      style = this._setPolygonStyle(feature, style);
-    }
+    if (feature.type === 1) style = this._setPointStyle(feature, style);
+    else if (feature.type === 2) style = this._setLineStyle(feature, style);
+    else if (feature.type === 3) style = this._setPolygonStyle(feature, style);
 
     ctx.lineWidth = style.stroke ? this._setWeight(style.weight) : 0;
     ctx.strokeStyle = style.stroke ? this._setOpacity(style.stroke, style.opacity) : {};
     ctx.fillStyle = style.fill ? this._setOpacity(style.fill, style.fillOpacity) : {};
-
   },
 
   _setPointStyle: function(feature, style) {
@@ -135,16 +124,11 @@ L.GridLayer.GeoJSON = L.GridLayer.extend({
 
   _setOpacity: function(color, opacity) {
     color = color || '#f00';
-    if (opacity) {
-      if (this._iscolorHex(color)) {
-        var colorRgb = this._colorRgb(color);
-        return "rgba(" + colorRgb[0] + "," + colorRgb[1] + "," + colorRgb[2] + "," + opacity + ")";
-      } else {
-        return color;
-      }
-    } else {
-      return color;
+    if (opacity && this._iscolorHex(color)) {
+      var colorRgb = this._colorRgb(color);
+      return "rgba(" + colorRgb[0] + "," + colorRgb[1] + "," + colorRgb[2] + "," + opacity + ")";
     }
+    return color;
   },
 
   _iscolorHex: function(color) {
