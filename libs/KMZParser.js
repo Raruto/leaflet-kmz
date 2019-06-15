@@ -16,62 +16,80 @@ L.KMZLoader = L.Class.extend({
 
   parse: function(kmzUrl) {
     this.name = this.name ? this.name : kmzUrl.split('/').pop();
-    this._loadKmz(kmzUrl);
+    this._load(kmzUrl);
   },
 
-  _loadKmz: function(kmzUrl) {
-    var that = this;
-    this._getBinaryContent(kmzUrl, function(err, data) {
-      if (err != null) {
-        console.error(kmzUrl, err, data);
-      } else {
-        that._parseKMZ(data);
-      }
-    });
+  _load: function(url) {
+    this._getBinaryContent(url, function(err, data) {
+      if (err != null)
+        console.error(url, err, data);
+      else
+        this._parse(data);
+    }.bind(this));
+  },
+
+  _parse: function(data) {
+    return this._isZipped(data) ? this._parseKMZ(data) : this._parseKML(data);
   },
 
   _parseKMZ: function(data) {
     var that = this;
-    JSZip.loadAsync(data).then(function(zip) {
+    JSZip.loadAsync(data).then((zip) => {
       Promise.all(that._mapZipFiles(zip)).then((list) => {
         Promise.all(that._mapListFiles(list)).then((data) => {
-          that._parseKML(data);
+          var kmlString = this._decodeKMZFolder(data);
+          that._parseKML(kmlString);
         });
       });
     });
   },
 
   _parseKML: function(data) {
-    var files = this._listToObject(data);
-    var kmlDoc = this._getKmlDoc(files);
-    var images = this._getImageFiles(Object.keys(files));
+    var kmlString = this._decodeKMLString(data);
+    var xmlDoc = this._toXML(kmlString);
+    this._kmlToLayer(xmlDoc);
+  },
 
-    kml = files[kmlDoc];
+  _decodeKMLString: function(data) {
+    return data instanceof ArrayBuffer ? String.fromCharCode.apply(null, new Uint8Array(data)) : data;
+  },
+
+  _decodeKMZFolder: function(data) {
+    var kmzFiles = this._listToObject(data);
+    var kmlDoc = this._getKmlDoc(kmzFiles);
+    var images = this._getImageFiles(Object.keys(kmzFiles));
+
+    kmlString = kmzFiles[kmlDoc];
 
     // replaces all images with their base64 encoding
     for (var i in images) {
       var imageUrl = images[i];
-      var dataUrl = files[imageUrl];
-      kml = this._replaceAll(kml, imageUrl, dataUrl);
+      var dataUrl = kmzFiles[imageUrl];
+      kmlString = this._replaceAll(kmlString, imageUrl, dataUrl);
     }
-
-    this._toGeoJSON(kml);
+    return kmlString;
   },
 
-  _toGeoJSON: function(text) {
-    var xmlDoc = (new DOMParser()).parseFromString(text, 'text/xml');
-    var data = toGeoJSON.kml(xmlDoc);
+  _toXML: function(text) {
+    return (new DOMParser()).parseFromString(text, 'text/xml');
+  },
+
+  _toGeoJSON: function(xmlDoc) {
+    return toGeoJSON.kml(xmlDoc);
+  },
+
+  _kmlToLayer: function(xmlDoc) {
+    var data = this._toGeoJSON(xmlDoc);
 
     this.geojson = L.geoJson(data, {
-      pointToLayer: this._pointToLayer,
-      onEachFeature: this._onEachFeature(xmlDoc),
+      pointToLayer: this._pointToLayer.bind(this),
+      onEachFeature: this._onEachFeature.bind(this),
     });
 
     this.layer = this.geojson;
+
     if (this.tiled) {
-      this.gridlayer = L.gridLayer.geoJson(data, {
-        xmlDoc: xmlDoc
-      });
+      this.gridlayer = L.gridLayer.geoJson(data);
       this.layer = L.featureGroup([this.gridlayer, this.geojson]);
     }
 
@@ -88,64 +106,73 @@ L.KMZLoader = L.Class.extend({
     });
   },
 
-  _onEachFeature: function(xmlDoc) {
-    var that = this;
-    // Closure for xmlDoc
-    return function(feature, layer) {
-      var name = feature.properties.name ? feature.properties.name : "";
-      var desc = feature.properties.description ? feature.properties.description : "";
-      var type = feature.geometry.type ? feature.geometry.type : "";
-
-      if (type === 'Point') {
-        var style = xmlDoc.querySelector(feature.properties.styleMapHash.normal);
-        var iconHref = style.querySelector('Icon href').innerHTML;
-        var width = 28;
-        var height = 28;
-        layer.setIcon(L.icon({
-          iconSize: [width, height],
-          iconAnchor: [width / 2, height / 2],
-          iconUrl: that.tiled ? that.emptyIcon : iconHref,
-        }));
-      } else if (type === 'LineString' || type === 'Polygon' || type === 'GeometryCollection') {
-        var styles = {
-          weight: 1,
-          opacity: 0,
-          fillOpacity: 0,
-        };
-        if (!that.tiled) {
-          if (feature.properties["stroke-width"]) {
-            styles.weight = feature.properties["stroke-width"] * 1.05;
-          }
-          if (feature.properties["stroke-opacity"]) {
-            styles.opacity = feature.properties["stroke-opacity"];
-          }
-          if (feature.properties["fill-opacity"]) {
-            styles.fillOpacity = feature.properties["fill-opacity"];
-          }
-          if (feature.properties.stroke) {
-            styles.color = feature.properties.stroke;
-          }
-          if (feature.properties.fill) {
-            styles.fillColor = feature.properties.fill;
-          }
-        }
-        layer.setStyle(styles);
-      } else {
-        console.warn('Unsupported feature type: ' + type);
+  _onEachFeature: function(feature, layer) {
+    switch (feature.geometry.type) {
+      case 'Point':
+        this._setLayerPointIcon(feature, layer);
+        break;
+      case 'LineString':
+      case 'Polygon':
+      case 'GeometryCollection':
+        this._setLayerStyle(feature, layer);
+        break;
+      default:
+        console.warn('Unsupported feature type: ' + feature.geometry.type);
         console.warn(feature);
-      }
-      if (name || desc) {
-        if (that.options.bindPopup) {
-          layer.bindPopup('<div>' + '<b>' + name + '</b>' + '<br>' + desc + '</div>');
-        }
-        if (that.options.bindTooltip) {
-          layer.bindTooltip('<b>' + name + '</b>', {
-            direction: 'auto',
-            sticky: true,
-          });
-        }
-      }
+        break;
+    }
+    this._setLayerBalloon(feature, layer);
+  },
+
+  _setLayerPointIcon: function(feature, layer) {
+    var width = 28;
+    var height = 28;
+    layer.setIcon(L.icon({
+      iconSize: [width, height],
+      iconAnchor: [width / 2, height / 2],
+      iconUrl: this.tiled ? this.emptyIcon : feature.properties.icon,
+    }));
+  },
+
+  _setLayerStyle: function(feature, layer) {
+    var styles = {
+      weight: 1,
+      opacity: 0,
+      fillOpacity: 0,
     };
+    if (!this.tiled) {
+      if (feature.properties["stroke-width"]) {
+        styles.weight = feature.properties["stroke-width"] * 1.05;
+      }
+      if (feature.properties["stroke-opacity"]) {
+        styles.opacity = feature.properties["stroke-opacity"];
+      }
+      if (feature.properties["fill-opacity"]) {
+        styles.fillOpacity = feature.properties["fill-opacity"];
+      }
+      if (feature.properties.stroke) {
+        styles.color = feature.properties.stroke;
+      }
+      if (feature.properties.fill) {
+        styles.fillColor = feature.properties.fill;
+      }
+    }
+    layer.setStyle(styles);
+  },
+
+  _setLayerBalloon: function(feature, layer) {
+    var name = feature.properties.name ? feature.properties.name : "";
+    var desc = feature.properties.description ? feature.properties.description : "";
+    if (!name && !desc) return;
+    if (this.options.bindPopup) {
+      layer.bindPopup('<div>' + '<b>' + name + '</b>' + '<br>' + desc + '</div>');
+    }
+    if (this.options.bindTooltip) {
+      layer.bindTooltip('<b>' + name + '</b>', {
+        direction: 'auto',
+        sticky: true,
+      });
+    }
   },
 
   _escapeRegExp: function(str) {
@@ -205,6 +232,18 @@ L.KMZLoader = L.Class.extend({
     return files.filter((file) => /\.(jpe?g|png|gif|bmp)$/i.test(file));
   },
 
+  /**
+   * It checks if a given file begins with PK, if so it's zipped
+   *
+   * @link https://en.wikipedia.org/wiki/List_of_file_signatures
+   */
+  _isZipped: function(file) {
+    var P = new Uint8Array(file, 0, 1); // offset, length
+    var K = new Uint8Array(file, 1, 1);
+    var PK = String.fromCharCode(P, K);
+    return 'PK' === PK;
+  },
+
   _readFile: function(file) {
     var filename = file[0];
     var fileblob = file[1];
@@ -237,14 +276,10 @@ L.KMZLoader = L.Class.extend({
 
   _getBinaryContent: function(path, callback) {
     try {
-
       var xhr = new window.XMLHttpRequest();
-
       xhr.open('GET', path, true);
-
       xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
       xhr.responseType = "arraybuffer";
-
       xhr.onreadystatechange = function(evt) {
         var file, err;
         if (xhr.readyState === 4) {
@@ -262,9 +297,7 @@ L.KMZLoader = L.Class.extend({
           }
         }
       };
-
       xhr.send();
-
     } catch (e) {
       callback(new Error(e), null);
     }

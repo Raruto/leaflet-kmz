@@ -17,12 +17,18 @@ L.GridLayer.GeoJSON = L.GridLayer.extend({
       width: 28,
       height: 28
     },
+    styles: {
+      strokeWidth: 1,
+      strokeColor: '#FFF',
+      strokeOpacity: 1.0,
+      fillColor: '#000',
+      fillOpacity: 0.25
+    }
   },
 
   initialize: function(geojson, options) {
     L.setOptions(this, options);
     L.GridLayer.prototype.initialize.call(this, options);
-    this.xmlDoc = options.xmlDoc;
     this.tileIndex = geojsonvt(geojson, this.options);
   },
 
@@ -62,15 +68,13 @@ L.GridLayer.GeoJSON = L.GridLayer.extend({
 
   _drawIcon: function(ctx, feature) {
     var icon = new Image(),
-      styleMapHash = this.xmlDoc.querySelector(feature.tags.styleMapHash.normal),
-      iconHref = styleMapHash.querySelector('Icon href').innerHTML,
       p = feature.geometry[0],
       width = this.options.icon.width,
       height = this.options.icon.height;
     icon.onload = function() {
       ctx.drawImage(icon, (p[0] / 16.0) - (width / 2.0), (p[1] / 16.0) - (height / 2.0), width, height);
     };
-    icon.src = iconHref;
+    icon.src = feature.tags.icon ? feature.tags.icon : null;
   },
 
   _drawLine: function(ctx, feature) {
@@ -101,18 +105,10 @@ L.GridLayer.GeoJSON = L.GridLayer.extend({
       style = this._setPolygonStyle(feature, style);
     }
 
-    if (style.stroke) {
-      ctx.lineWidth = this._setWeight(style.weight);
-      ctx.strokeStyle = this._setOpacity(style.stroke, style.opacity);
-    } else {
-      ctx.lineWidth = 0;
-      ctx.strokeStyle = {};
-    }
-    if (style.fill) {
-      ctx.fillStyle = this._setOpacity(style.fill, style.fillOpacity);
-    } else {
-      ctx.fillStyle = {};
-    }
+    ctx.lineWidth = style.stroke ? this._setWeight(style.weight) : 0;
+    ctx.strokeStyle = style.stroke ? this._setOpacity(style.stroke, style.opacity) : {};
+    ctx.fillStyle = style.fill ? this._setOpacity(style.fill, style.fillOpacity) : {};
+
   },
 
   _setPointStyle: function(feature, style) {
@@ -120,16 +116,16 @@ L.GridLayer.GeoJSON = L.GridLayer.extend({
   },
 
   _setLineStyle: function(feature, style) {
-    style.weight = feature.tags["stroke-width"] * 1.05;
-    style.opacity = feature.tags["stroke-opacity"];
-    style.stroke = feature.tags.stroke;
+    style.weight = (feature.tags["stroke-width"] ? feature.tags["stroke-width"] : this.options.styles.strokeWidth) * 1.05;
+    style.opacity = feature.tags["stroke-opacity"] ? feature.tags["stroke-opacity"] : this.options.styles.strokeOpacity;
+    style.stroke = feature.tags.stroke ? feature.tags.stroke : this.options.styles.strokeColor;
     return style;
   },
 
   _setPolygonStyle: function(feature, style) {
     style = this._setLineStyle(feature, style);
-    style.fill = feature.tags.fill;
-    style.fillOpacity = feature.tags["fill-opacity"];
+    style.fill = feature.tags.fill ? feature.tags.fill : this.options.styles.fillColor;
+    style.fillOpacity = feature.tags["fill-opacity"] ? feature.tags["fill-opacity"] : this.options.styles.fillOpacity;
     return style;
   },
 
@@ -152,9 +148,7 @@ L.GridLayer.GeoJSON = L.GridLayer.extend({
   },
 
   _iscolorHex: function(color) {
-    var sColor = color.toLowerCase();
-    var reg = /^#([0-9a-fA-f]{3}|[0-9a-fA-f]{6})$/;
-    return reg.test(sColor);
+    return /^#([0-9a-fA-f]{3}|[0-9a-fA-f]{6})$/.test(color.toLowerCase());
   },
 
   _colorRgb: function(color) {
