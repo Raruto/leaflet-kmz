@@ -68,12 +68,12 @@ _For a working example see one of the following demos:_
     ```
 
 **Notes:**
-- the plugin will identify and process both zipped (kmz) or unzipped (kml) files
+- supported file formats: **.kmz**, **.kml**
 - to be able to use Google files (eg. through Google My Maps) you **MUST** use a valid third-party kml proxy server
 
 ---
 
-**Compatibile with:** leaflet@1.3.4, jszip@3.1.5, togeojson@3.0.0, geojson-vt@3.0.0
+**Compatibile with:** leaflet@1.3.4, jszip@3.1.5, togeojson@3.0.0, geojson-vt@3.0.0, leaflet-pointable@0.0.3
 
 ---
 
