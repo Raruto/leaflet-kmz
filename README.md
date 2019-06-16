@@ -18,12 +18,12 @@ _For a working example see [demo](https://raruto.github.io/examples/leaflet-kmz/
     <!-- JSZIP -->
     <script src="https://unpkg.com/jszip@3.1.5/dist/jszip.min.js"></script>
     <!-- togeojson -->
-    <script src="https://unpkg.com/togeojson@0.16.0/togeojson.js"></script>
+    <script src="https://unpkg.com/@tmcw/togeojson@3.0.0/dist/togeojsons.min.js"></script>
     <!-- geojson-vt -->
     <script src="https://unpkg.com/geojson-vt@3.0.0/geojson-vt.js"></script>
     <!-- Leaflet-KMZ -->
-    <script src="https://unpkg.com/leaflet-kmz@0.0.6/libs/KMZParser.js"></script>
-    <script src="https://unpkg.com/leaflet-kmz@0.0.6/libs/GridLayer.GeoJSON.js"></script>
+    <script src="https://unpkg.com/leaflet-kmz@latest/libs/KMZParser.js"></script>
+    <script src="https://unpkg.com/leaflet-kmz@latest/libs/GridLayer.GeoJSON.js"></script>
     ...
     </head>
     ```
@@ -64,12 +64,14 @@ _For a working example see [demo](https://raruto.github.io/examples/leaflet-kmz/
     </script>
     ```
 
-_**NB** to be able to use Google files (eg. Google My Maps) you **MUST** use a valid third-party kml proxy server._
+**Notes:**
+- the plugin will identify and process both zipped (kmz) or unzipped (kml) files
+- to be able to use Google files (eg. through Google My Maps) you **MUST** use a valid third-party kml proxy server
 
 ---
 
-**Compatibile with:** leaflet@1.3.4, jszip@3.1.5, togeojson@0.16.0, geojson-vt@3.0.0
+**Compatibile with:** leaflet@1.3.4, jszip@3.1.5, togeojson@3.0.0, geojson-vt@3.0.0
 
 ---
 
-**Contributors:** [Raruto](https://github.com/Raruto)
+**Contributors:** [A-Lurker](https://github.com/a-lurker/leaflet-kmz), [BrandonXiang](https://github.com/brandonxiang/leaflet-geojson-vt), [Raruto](https://github.com/Raruto/leaflet-kmz)
