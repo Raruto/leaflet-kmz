@@ -8,6 +8,7 @@
 L.GridLayer.GeoJSON = L.GridLayer.extend({
   options: {
     pointable: false,
+    ballon: false,
     bindPopup: false,
     bindTooltip: false,
     async: false,
@@ -38,8 +39,10 @@ L.GridLayer.GeoJSON = L.GridLayer.extend({
 
   onAdd: function(map) {
     L.GridLayer.prototype.onAdd.call(this, map);
-    if (this.options.bindPopup) this._map.on("click", this.updateBalloon, this);
-    if (this.options.bindTooltip) this._map.on("mousemove", this.updateBalloon, this);
+    if (this.options.ballon) {
+      if (this.options.bindPopup) this._map.on("click", this.updateBalloon, this);
+      if (this.options.bindTooltip) this._map.on("mousemove", this.updateBalloon, this);
+    }
   },
 
   createTile: function(coords) {

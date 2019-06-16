@@ -4,6 +4,7 @@ L.KMZLoader = L.Class.extend({
   options: {
     tiled: true,
     interactive: true,
+    ballon: true,
     bindPopup: true,
     bindTooltip: true,
     debug: 0,
@@ -98,6 +99,7 @@ L.KMZLoader = L.Class.extend({
     if (this.tiled) {
       this.gridlayer = L.gridLayer.geoJson(data, {
         pointable: this.pointable,
+        ballon: this.options.ballon,
         bindPopup: this.options.bindPopup,
         bindTooltip: this.options.bindTooltip,
       });
@@ -176,6 +178,8 @@ L.KMZLoader = L.Class.extend({
   },
 
   _setLayerBalloon: function(feature, layer) {
+    if (!this.options.ballon) return;
+
     var name = feature.properties.name ? feature.properties.name : "";
     var desc = feature.properties.description ? feature.properties.description : "";
 
