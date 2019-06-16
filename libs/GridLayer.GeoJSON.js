@@ -38,10 +38,8 @@ L.GridLayer.GeoJSON = L.GridLayer.extend({
 
   onAdd: function(map) {
     L.GridLayer.prototype.onAdd.call(this, map);
-    if (this.options.bindPopup)
-      this._map.on("click", this.updateBalloon, this);
-    if (this.options.bindTooltip)
-      this._map.on("mousemove", this.updateBalloon, this);
+    if (this.options.bindPopup) this._map.on("click", this.updateBalloon, this);
+    if (this.options.bindTooltip) this._map.on("mousemove", this.updateBalloon, this);
   },
 
   createTile: function(coords) {
@@ -185,40 +183,54 @@ L.GridLayer.GeoJSON = L.GridLayer.extend({
     return inside;
   },
 
-  _getLatLngs: function(feature) {
-    var o = [],
-      i = 0;
-    var type = feature.geometry.type;
-    if (type == "Polygon" || type == "LineString") {
-      var coords = feature.geometry.coordinates[0];
-      for (var j = 0; j < coords.length; j++) {
-        o[i++] = [coords[j][0], coords[j][1]];
-      }
+  _getLatLngsPoly: function(feature, i) {
+    var o = [];
+    var geometry = feature.geometry || feature;
+    var coords = geometry.type == "Polygon" ? geometry.coordinates[0] : geometry.coordinates;
+    for (var j = i || 0; j < coords.length; j++) {
+      o[i++] = [coords[j][0], coords[j][1]];
+    }
+    return o.length ? o : false;
+  },
+
+  _getLatLngsPoint: function(feature, i) {
+    var o = [];
+    var geometry = feature.geometry || feature;
+    var coords = geometry.coordinates;
+    o[i || 0] = [coords[0], coords[1]];
+    return o.length ? o : false;
+  },
+
+  _getLatLngs: function(feature, i) {
+    var o = [];
+    i = i || 0;
+    var coords;
+
+    var geometry = feature.geometry || feature;
+    var type = geometry.type;
+
+    if (type == "Point") {
+      coords = this._getLatLngsPoint(feature, i);
+      if (coords) Array.prototype.push.apply(o, coords);
+    } else if (type == "LineString" || type == "Polygon") {
+      coords = this._getLatLngsPoly(feature, i);
+      if (coords) Array.prototype.push.apply(o, coords);
     } else if (type == "GeometryCollection") {
-      var polys = feature.geometry.geometries;
-      for (var l = 0; l < polys.length; l++) {
-        if (polys[l].type == "Polygon" || type == "LineString") {
-          var poly = polys[l].coordinates[0];
-          for (var k = 0; k < poly.length; k++) {
-            o[i++] = [poly[k][0], poly[k][1]];
-          }
-        } else {
-          console.warn("Unsupported feature type: " + polys[l].type);
-        }
+      var polys = geometry.geometries;
+      for (var j = 0; j < polys.length; j++) {
+        coords = this._getLatLngs(polys[j], i);
+        if (coords) Array.prototype.push.apply(o, coords);
       }
-    } else if (type == "Point") {
-      var ll = feature.geometry.coordinates;
-      o[i++] = [ll[0], ll[1]];
     } else {
       console.warn("Unsupported feature type: " + type);
     }
-    return o;
+    return o.length ? o : false;
   },
 
   /**
    * (EXPERIMENTAL) Based on: https://github.com/mapbox/leaflet-pip
    *
-   * TODO: add support for Points, Lines and "donuts" Polygons
+   * TODO: add/check support for Points, Lines and "donuts" Polygons
    */
   pointInLayer: function(p, layer, first) {
     if (p instanceof L.LatLng) p = [p.lng, p.lat];
@@ -230,15 +242,18 @@ L.GridLayer.GeoJSON = L.GridLayer.extend({
 
     for (var i = 0; i < features.length; i++) {
       if (first && results.length) break;
-      var lls = [this._getLatLngs(features[i])];
-      for (var j = 0; j < lls.length; j++) {
-        var inside = this._pointInPolygon(p, lls[j]);
+      var coords = this._getLatLngs(features[i]);
+      if (coords) {
+        var inside = this._pointInPolygon(p, coords); // NB. works only with polygons (see: https://observablehq.com/@tmcw/understanding-point-in-polygon).
         if (inside) results.push(features[i]);
       }
     }
     return results.length ? results : false;
   },
 
+  /**
+   * (EXPERIMENTAL) Based on: https://github.com/Raruto/leaflet-pointable
+   */
   updateBalloon: function(e) {
     if (!this._map || !this.options.pointable || !this._map.isPointablePixel() || !this.isPointablePixel()) return;
     this._popup = this._popup || new L.Popup();
