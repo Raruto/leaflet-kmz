@@ -1,7 +1,10 @@
 # leaflet-kmz
 A KMZ file loader for Leaflet Maps
 
-_For a working example see [demo](https://raruto.github.io/examples/leaflet-kmz/leaflet-kmz.html)_
+_For a working example see one of the following demos:_
+
+- [multiple kmz files](https://raruto.github.io/examples/leaflet-kmz/leaflet-kmz.html)
+- [mouse interactions](https://raruto.github.io/examples/leaflet-kmz/leaflet-kmz_mouse-interactions.html)
 
 ---
 
