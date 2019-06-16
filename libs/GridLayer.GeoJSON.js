@@ -7,6 +7,9 @@
  */
 L.GridLayer.GeoJSON = L.GridLayer.extend({
   options: {
+    pointable: false,
+    bindPopup: false,
+    bindTooltip: false,
     async: false,
     maxZoom: 24,
     tolerance: 3,
@@ -31,6 +34,14 @@ L.GridLayer.GeoJSON = L.GridLayer.extend({
     L.GridLayer.prototype.initialize.call(this, options);
     this.tileIndex = geojsonvt(geojson, this.options);
     this.geojson = geojson; // eg. saved for advanced "leaflet-pip" mouse/click integrations
+  },
+
+  onAdd: function(map) {
+    L.GridLayer.prototype.onAdd.call(this, map);
+    if (this.options.bindPopup)
+      this._map.on("click", this.updateBalloon, this);
+    if (this.options.bindTooltip)
+      this._map.on("mousemove", this.updateBalloon, this);
   },
 
   createTile: function(coords) {
@@ -149,7 +160,101 @@ L.GridLayer.GeoJSON = L.GridLayer.extend({
       sColorChange.push(parseInt("0x" + sColor.slice(j, j + 2)));
     }
     return sColorChange;
-  }
+  },
+
+  /**
+   * Point in Polygon: ray-casting algorithm
+   *
+   * @link http://www.ecse.rpi.edu/Homepages/wrf/Research/Short_Notes/pnpoly.html
+   */
+  _pointInPolygon: function(point, vs) {
+    var x = point[0];
+    var y = point[1];
+
+    var inside = false;
+    for (var i = 0, j = vs.length - 1; i < vs.length; j = i++) {
+      var xi = vs[i][0];
+      var yi = vs[i][1];
+      var xj = vs[j][0];
+      var yj = vs[j][1];
+
+      var intersect = ((yi > y) != (yj > y)) && (x < (xj - xi) * (y - yi) / (yj - yi) + xi);
+      if (intersect) inside = !inside;
+    }
+
+    return inside;
+  },
+
+  _getLatLngs: function(feature) {
+    var o = [],
+      i = 0;
+    var type = feature.geometry.type;
+    if (type == "Polygon" || type == "LineString") {
+      var coords = feature.geometry.coordinates[0];
+      for (var j = 0; j < coords.length; j++) {
+        o[i++] = [coords[j][0], coords[j][1]];
+      }
+    } else if (type == "GeometryCollection") {
+      var polys = feature.geometry.geometries;
+      for (var l = 0; l < polys.length; l++) {
+        if (polys[l].type == "Polygon" || type == "LineString") {
+          var poly = polys[l].coordinates[0];
+          for (var k = 0; k < poly.length; k++) {
+            o[i++] = [poly[k][0], poly[k][1]];
+          }
+        } else {
+          console.warn("Unsupported feature type: " + polys[l].type);
+        }
+      }
+    } else if (type == "Point") {
+      var ll = feature.geometry.coordinates;
+      o[i++] = [ll[0], ll[1]];
+    } else {
+      console.warn("Unsupported feature type: " + type);
+    }
+    return o;
+  },
+
+  /**
+   * (EXPERIMENTAL) Based on: https://github.com/mapbox/leaflet-pip
+   *
+   * TODO: add support for Points, Lines and "donuts" Polygons
+   */
+  pointInLayer: function(p, layer, first) {
+    if (p instanceof L.LatLng) p = [p.lng, p.lat];
+    var results = [];
+
+    layer = layer || this.geojson;
+    first = first || true;
+    features = layer.features;
+
+    for (var i = 0; i < features.length; i++) {
+      if (first && results.length) break;
+      var lls = [this._getLatLngs(features[i])];
+      for (var j = 0; j < lls.length; j++) {
+        var inside = this._pointInPolygon(p, lls[j]);
+        if (inside) results.push(features[i]);
+      }
+    }
+    return results.length ? results : false;
+  },
+
+  updateBalloon: function(e) {
+    if (!this._map || !this.options.pointable || !this._map.isPointablePixel() || !this.isPointablePixel()) return;
+    this._popup = this._popup || new L.Popup();
+    var points = this.pointInLayer(e.latlng, this.geojson);
+    if (points) {
+      var feature = points[0];
+      var name = feature.properties.name || "";
+      if (name) {
+        this._popup.setLatLng(e.latlng);
+        this._popup.setContent(name);
+        this._popup.openOn(this._map);
+      }
+    } else {
+      this._map.closePopup(this._popup);
+    }
+  },
 
 });
 

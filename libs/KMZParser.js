@@ -11,10 +11,14 @@ L.KMZLoader = L.Class.extend({
 
   initialize: function(opts) {
     L.setOptions(this, opts);
-    this.name = this.options.name;
+    // Optimized GeoJSON Vector Tiles through "geojson-vt.js" library.
     this.tiled = 'geojsonvt' in window && this.options.tiled;
+    // Standard Mouse interactions through default "leaflet.js" layers.
     this.interactive = this.options.interactive;
+    // (Experimental) Optimized Mouse interactions through "geojson-vt.js" and "leaflet-pointable.js" libraries.
+    this.pointable = this.tiled && !this.options.interactive && this.options.pointable;
     this.emptyIcon = 'data:image/png;base64,' + "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAFElEQVR4XgXAAQ0AAABAMP1L30IDCPwC/o5WcS4AAAAASUVORK5CYII=";
+    this.name = this.options.name;
     this.callback = opts.onKMZLoaded;
   },
 
@@ -92,7 +96,11 @@ L.KMZLoader = L.Class.extend({
     }
 
     if (this.tiled) {
-      this.gridlayer = L.gridLayer.geoJson(data);
+      this.gridlayer = L.gridLayer.geoJson(data, {
+        pointable: this.pointable,
+        bindPopup: this.options.bindPopup,
+        bindTooltip: this.options.bindTooltip,
+      });
       this.layer = this.interactive ? L.featureGroup([this.gridlayer, this.geojson]) : this.gridlayer;
     }
 
