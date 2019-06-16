@@ -266,7 +266,7 @@ L.GridLayer.GeoJSON = L.GridLayer.extend({
       var name = feature.properties.name || "";
       if (name) {
         this._popup.setLatLng(e.latlng);
-        this._popup.setContent(name);
+        this._popup.setContent('<b>' + name + '</b>');
         this._popup.openOn(this._map);
       }
     } else {
