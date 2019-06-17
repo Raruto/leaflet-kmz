@@ -2,7 +2,7 @@
   "name": "leaflet-kmz",
   "version": "0.1.0",
   "description": "A KMZ file loader for Leaflet Maps",
-  "main": "/libs/KMZParser.js",
+  "main": "libs/KMZParser.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
