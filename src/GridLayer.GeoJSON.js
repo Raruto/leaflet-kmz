@@ -1,3 +1,5 @@
+import geojsonvt from 'geojson-vt';
+import 'leaflet-pointable';
 /**
  * A plugin combining geojson-vt with leafletjs which is initially inspired by leaflet-geojson-vt.
  *
@@ -278,4 +280,12 @@ L.GridLayer.GeoJSON = L.GridLayer.extend({
 
 L.gridLayer.geoJson = function(geojson, options) {
   return new L.GridLayer.GeoJSON(geojson, options);
+};
+
+export var GridLayer = {
+  GeoJSON: L.GridLayer.GeoJSON,
+};
+
+export var gridLayer = {
+  geoJSON: L.gridLayer.geoJson,
 };

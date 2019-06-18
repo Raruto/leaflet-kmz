@@ -1,4 +1,6 @@
-/*jshint esversion: 6 */
+import JSZip from 'jszip';
+import geojsonvt from 'geojson-vt';
+import toGeoJSON from '@tmcw/togeojson';
 
 L.KMZLoader = L.Class.extend({
   options: {
@@ -66,7 +68,7 @@ L.KMZLoader = L.Class.extend({
     var kmlDoc = this._getKmlDoc(kmzFiles);
     var images = this._getImageFiles(Object.keys(kmzFiles));
 
-    kmlString = kmzFiles[kmlDoc];
+    var kmlString = kmzFiles[kmlDoc];
 
     // replaces all images with their base64 encoding
     for (var i in images) {
@@ -346,20 +348,4 @@ L.KMZLoader = L.Class.extend({
 
 });
 
-L.KMZParser = L.Class.extend({
-
-  initialize: function(opts) {
-    L.setOptions(this, opts);
-    this.loaders = [];
-  },
-
-  load: function(kmzUrl, opts) {
-    var kmzLoader = new L.KMZLoader(L.extend({}, this.options, opts));
-    kmzLoader.parse(kmzUrl);
-    this.loaders.push(kmzLoader);
-  },
-
-  get: function(i) {
-    return i < this.loaders.length ? this.loaders[i] : false;
-  },
-});
+export var KMZLoader = L.KMZLoader;
