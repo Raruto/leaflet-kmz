@@ -84,7 +84,7 @@ L.KMZLoader = L.Class.extend({
   },
 
   _toGeoJSON: function(xmlDoc) {
-    return toGeoJSON.kml(xmlDoc);
+    return (toGeoJSON || window.toGeoJSON).kml(xmlDoc);
   },
 
   _kmlToLayer: function(xmlDoc) {
