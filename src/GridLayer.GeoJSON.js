@@ -35,7 +35,7 @@ L.GridLayer.GeoJSON = L.GridLayer.extend({
   initialize: function(geojson, options) {
     L.setOptions(this, options);
     L.GridLayer.prototype.initialize.call(this, options);
-    this.tileIndex = geojsonvt(geojson, this.options);
+    this.tileIndex = (geojsonvt || window.geojsonvt)(geojson, this.options);
     this.geojson = geojson; // eg. saved for advanced "leaflet-pip" mouse/click integrations
   },
 
