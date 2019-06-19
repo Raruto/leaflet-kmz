@@ -110,7 +110,7 @@
     },
 
     _toGeoJSON: function(xmlDoc) {
-      return toGeoJSON.kml(xmlDoc);
+      return (toGeoJSON || window.toGeoJSON).kml(xmlDoc);
     },
 
     _kmlToLayer: function(xmlDoc) {
