@@ -40,7 +40,7 @@
     initialize: function(opts) {
       L.setOptions(this, opts);
       // Optimized GeoJSON Vector Tiles through "geojson-vt.js" library.
-      this.tiled = 'geojsonvt' in window && this.options.tiled;
+      this.tiled = ('geojsonvt' in window || geojsonvt) && this.options.tiled;
       // Standard Mouse interactions through default "leaflet.js" layers.
       this.interactive = this.options.interactive;
       // (Experimental) Optimized Mouse interactions through "geojson-vt.js" and "leaflet-pointable.js" libraries.
