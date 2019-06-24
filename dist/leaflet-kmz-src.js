@@ -6,7 +6,6 @@
 
   JSZip = JSZip && JSZip.hasOwnProperty('default') ? JSZip['default'] : JSZip;
   geojsonvt = geojsonvt && geojsonvt.hasOwnProperty('default') ? geojsonvt['default'] : geojsonvt;
-  toGeoJSON = toGeoJSON && toGeoJSON.hasOwnProperty('default') ? toGeoJSON['default'] : toGeoJSON;
 
   L.KMZParser = L.Class.extend({
 

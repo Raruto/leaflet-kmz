@@ -1,6 +1,6 @@
 import JSZip from 'jszip';
 import geojsonvt from 'geojson-vt';
-import toGeoJSON from '@tmcw/togeojson';
+import * as toGeoJSON from '@tmcw/togeojson';
 
 L.KMZLoader = L.Class.extend({
   options: {
