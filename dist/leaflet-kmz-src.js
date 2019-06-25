@@ -2,9 +2,8 @@
   typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports, require('jszip'), require('geojson-vt'), require('@tmcw/togeojson'), require('leaflet-pointable')) :
   typeof define === 'function' && define.amd ? define(['exports', 'jszip', 'geojson-vt', '@tmcw/togeojson', 'leaflet-pointable'], factory) :
   (global = global || self, factory(global['leaflet-kmz'] = {}, global.JSZip, global.geojsonvt, global.toGeoJSON));
-}(this, function (exports, JSZip, geojsonvt, toGeoJSON) { 'use strict';
+}(this, function (exports, jszip, geojsonvt, toGeoJSON) { 'use strict';
 
-  JSZip = JSZip && JSZip.hasOwnProperty('default') ? JSZip['default'] : JSZip;
   geojsonvt = geojsonvt && geojsonvt.hasOwnProperty('default') ? geojsonvt['default'] : geojsonvt;
 
   L.KMZParser = L.Class.extend({
