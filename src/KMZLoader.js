@@ -1,4 +1,4 @@
-import JSZip from 'jszip';
+import 'jszip';
 import geojsonvt from 'geojson-vt';
 import * as toGeoJSON from '@tmcw/togeojson';
 
