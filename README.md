@@ -37,7 +37,7 @@ _For a working example see one of the following demos:_
     ...
     </body>
     ```
-3. **create your first simple “leaflet-kmz slippy map**
+3. **create your first simple “leaflet-kmz” slippy map**
     ```html
     <script>
       var map = L.map('map');
