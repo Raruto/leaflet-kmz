@@ -382,6 +382,7 @@
    *
    * @link https://github.com/brandonxiang/leaflet-geojson-vt
    */
+
   L.GridLayer.GeoJSON = L.GridLayer.extend({
     options: {
       pointable: false,
@@ -618,7 +619,7 @@
 
       layer = layer || this.geojson;
       first = first || true;
-      features = layer.features;
+      var features = layer.features;
 
       for (var i = 0; i < features.length; i++) {
         if (first && results.length) break;

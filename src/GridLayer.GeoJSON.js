@@ -1,5 +1,3 @@
-import geojsonvt from 'geojson-vt';
-import 'leaflet-pointable';
 /**
  * A plugin combining geojson-vt with leafletjs which is initially inspired by leaflet-geojson-vt.
  *
@@ -7,6 +5,10 @@ import 'leaflet-pointable';
  *
  * @link https://github.com/brandonxiang/leaflet-geojson-vt
  */
+
+import geojsonvt from 'geojson-vt';
+import 'leaflet-pointable';
+
 L.GridLayer.GeoJSON = L.GridLayer.extend({
   options: {
     pointable: false,
@@ -243,7 +245,7 @@ L.GridLayer.GeoJSON = L.GridLayer.extend({
 
     layer = layer || this.geojson;
     first = first || true;
-    features = layer.features;
+    var features = layer.features;
 
     for (var i = 0; i < features.length; i++) {
       if (first && results.length) break;
