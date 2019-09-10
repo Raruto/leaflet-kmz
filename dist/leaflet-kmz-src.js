@@ -1,11 +1,8 @@
 (function (global, factory) {
-  typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports, require('jszip'), require('geojson-vt'), require('@tmcw/togeojson'), require('leaflet-pointable')) :
-  typeof define === 'function' && define.amd ? define(['exports', 'jszip', 'geojson-vt', '@tmcw/togeojson', 'leaflet-pointable'], factory) :
-  (global = global || self, factory(global['leaflet-kmz'] = {}, global.JSZip, global.geojsonvt, global.toGeoJSON));
-}(this, function (exports, JSZip, geojsonvt, toGeoJSON) { 'use strict';
-
-  JSZip = JSZip && JSZip.hasOwnProperty('default') ? JSZip['default'] : JSZip;
-  geojsonvt = geojsonvt && geojsonvt.hasOwnProperty('default') ? geojsonvt['default'] : geojsonvt;
+  typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports, require('leaflet-pointable')) :
+  typeof define === 'function' && define.amd ? define(['exports', 'leaflet-pointable'], factory) :
+  (global = global || self, factory(global['leaflet-kmz'] = {}));
+}(this, function (exports) { 'use strict';
 
   L.KMZParser = L.Class.extend({
 
@@ -15,17 +12,71 @@
     },
 
     load: function(kmzUrl, opts) {
-      var kmzLoader = new L.KMZLoader(L.extend({}, this.options, opts));
-      kmzLoader.parse(kmzUrl);
-      this.loaders.push(kmzLoader);
+      this._loadAsyncJS(); // async download all required JS modules.
+      this._waitAsyncJS(this._loadKMZ.bind(this, kmzUrl, opts)); // wait until all JS modules are downloaded.
     },
 
     get: function(i) {
       return i < this.loaders.length ? this.loaders[i] : false;
     },
+
+    _loadKMZ: function(kmzUrl, opts) {
+      var kmzLoader = new L.KMZLoader(L.extend({}, this.options, opts));
+      kmzLoader.parse(kmzUrl);
+      this.loaders.push(kmzLoader);
+    },
+
+    _loadAsyncJS: function() {
+      if (!this._jsPromise) {
+        var urls = [];
+        var host = 'https://unpkg.com/';
+
+        if (typeof JSZip !== 'function' && typeof window.JSZip !== 'function') {
+          urls.push(host + 'jszip@3.1.5/dist/jszip.min.js');
+        }
+        if (typeof toGeoJSON !== 'object' && typeof window.toGeoJSON !== 'object') {
+          urls.push(host + '@tmcw/togeojson@3.0.1/dist/togeojsons.min.js');
+        }
+        if (typeof geojsonvt !== 'function' && typeof window.geojsonvt !== 'function') {
+          urls.push(host + 'geojson-vt@3.0.0/geojson-vt.js');
+        }
+
+        if (urls.length) {
+          var promises = urls.map(url => this._loadJS(url));
+          this._jsPromisePending = true;
+          this._jsPromise = Promise.all(promises).then(function() {
+            this._jsPromisePending = false;
+          }.bind(this));
+        }
+      }
+    },
+
+    _loadJS: function(url) {
+      return new Promise(function(resolve, reject) {
+        var tag = document.createElement("script");
+        tag.type = "text/javascript";
+        tag.src = url;
+        tag.onload = resolve.bind(url);
+        tag.onerror = reject.bind(url);
+        document.head.appendChild(tag);
+      });
+    },
+
+    _waitAsyncJS: function(callback) {
+      if (this._jsPromise && this._jsPromisePending) {
+        this._jsPromise.then(callback);
+      } else {
+        callback.call();
+      }
+    },
+
   });
 
   var KMZParser = L.KMZParser;
+
+  // import JSZip from 'jszip';
+  // import geojsonvt from 'geojson-vt';
+  // import * as toGeoJSON from '@tmcw/togeojson';
 
   L.KMZLoader = L.Class.extend({
     options: {
@@ -39,12 +90,10 @@
 
     initialize: function(opts) {
       L.setOptions(this, opts);
-      // Optimized GeoJSON Vector Tiles through "geojson-vt.js" library.
-      this.tiled = ('geojsonvt' in window || geojsonvt) && this.options.tiled;
-      // Standard Mouse interactions through default "leaflet.js" layers.
-      this.interactive = this.options.interactive;
-      // (Experimental) Optimized Mouse interactions through "geojson-vt.js" and "leaflet-pointable.js" libraries.
-      this.pointable = this.tiled && !this.options.interactive && this.options.pointable;
+
+      this.tiled = this.options.tiled; // (Optimized) GeoJSON Vector Tiles ["geojson-vt.js"] library.
+      this.interactive = this.options.interactive; // (Default) Mouse interactions through ["leaflet.js"] layers.
+      this.pointable = this.tiled && !this.interactive && this.options.pointable; // (Experimental) Optimized Mouse interactions through ["geojson-vt.js", "leaflet-pointable.js"] libraries.
       this.emptyIcon = 'data:image/png;base64,' + "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAFElEQVR4XgXAAQ0AAABAMP1L30IDCPwC/o5WcS4AAAAASUVORK5CYII=";
       this.name = this.options.name;
       this.callback = opts.onKMZLoaded;
@@ -609,7 +658,7 @@
     },
 
     /**
-     * (EXPERIMENTAL) Based on: https://github.com/mapbox/leaflet-pip
+     * (EXPERIMENTAL) Inspired by: https://github.com/mapbox/leaflet-pip
      *
      * TODO: add/check support for Points, Lines and "donuts" Polygons
      */
@@ -633,7 +682,7 @@
     },
 
     /**
-     * (EXPERIMENTAL) Based on: https://github.com/Raruto/leaflet-pointable
+     * (EXPERIMENTAL) Inspired by: https://github.com/Raruto/leaflet-pointable
      */
     updateBalloon: function(e) {
       if (!this._map || !this.options.pointable || !this._map.isPointablePixel() || !this.isPointablePixel()) return;

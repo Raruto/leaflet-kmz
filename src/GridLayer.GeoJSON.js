@@ -6,7 +6,7 @@
  * @link https://github.com/brandonxiang/leaflet-geojson-vt
  */
 
-import geojsonvt from 'geojson-vt';
+// import geojsonvt from 'geojson-vt';
 import 'leaflet-pointable';
 
 L.GridLayer.GeoJSON = L.GridLayer.extend({
@@ -235,7 +235,7 @@ L.GridLayer.GeoJSON = L.GridLayer.extend({
   },
 
   /**
-   * (EXPERIMENTAL) Based on: https://github.com/mapbox/leaflet-pip
+   * (EXPERIMENTAL) Inspired by: https://github.com/mapbox/leaflet-pip
    *
    * TODO: add/check support for Points, Lines and "donuts" Polygons
    */
@@ -259,7 +259,7 @@ L.GridLayer.GeoJSON = L.GridLayer.extend({
   },
 
   /**
-   * (EXPERIMENTAL) Based on: https://github.com/Raruto/leaflet-pointable
+   * (EXPERIMENTAL) Inspired by: https://github.com/Raruto/leaflet-pointable
    */
   updateBalloon: function(e) {
     if (!this._map || !this.options.pointable || !this._map.isPointablePixel() || !this.isPointablePixel()) return;

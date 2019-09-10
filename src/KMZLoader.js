@@ -1,6 +1,6 @@
-import JSZip from 'jszip';
-import geojsonvt from 'geojson-vt';
-import * as toGeoJSON from '@tmcw/togeojson';
+// import JSZip from 'jszip';
+// import geojsonvt from 'geojson-vt';
+// import * as toGeoJSON from '@tmcw/togeojson';
 
 L.KMZLoader = L.Class.extend({
   options: {
@@ -14,12 +14,10 @@ L.KMZLoader = L.Class.extend({
 
   initialize: function(opts) {
     L.setOptions(this, opts);
-    // Optimized GeoJSON Vector Tiles through "geojson-vt.js" library.
-    this.tiled = ('geojsonvt' in window || geojsonvt) && this.options.tiled;
-    // Standard Mouse interactions through default "leaflet.js" layers.
-    this.interactive = this.options.interactive;
-    // (Experimental) Optimized Mouse interactions through "geojson-vt.js" and "leaflet-pointable.js" libraries.
-    this.pointable = this.tiled && !this.options.interactive && this.options.pointable;
+
+    this.tiled = this.options.tiled; // (Optimized) GeoJSON Vector Tiles ["geojson-vt.js"] library.
+    this.interactive = this.options.interactive; // (Default) Mouse interactions through ["leaflet.js"] layers.
+    this.pointable = this.tiled && !this.interactive && this.options.pointable; // (Experimental) Optimized Mouse interactions through ["geojson-vt.js", "leaflet-pointable.js"] libraries.
     this.emptyIcon = 'data:image/png;base64,' + "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAFElEQVR4XgXAAQ0AAABAMP1L30IDCPwC/o5WcS4AAAAASUVORK5CYII=";
     this.name = this.options.name;
     this.callback = opts.onKMZLoaded;
