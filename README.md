@@ -18,12 +18,6 @@ _For a working example see one of the following demos:_
     <!-- Leaflet (JS/CSS) -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.3.4/dist/leaflet.css">
     <script src="https://unpkg.com/leaflet@1.3.4/dist/leaflet.js"></script>
-    <!-- JSZIP -->
-    <script src="https://unpkg.com/jszip@3.1.5/dist/jszip.min.js"></script>
-    <!-- @tmcw/togeojson -->
-    <script src="https://unpkg.com/@tmcw/togeojson@3.0.1/dist/togeojsons.min.js"></script>
-    <!-- geojson-vt -->
-    <script src="https://unpkg.com/geojson-vt@3.0.0/geojson-vt.js"></script>
     <!-- Leaflet-KMZ -->
     <script src="https://unpkg.com/leaflet-kmz@latest/dist/leaflet-kmz.js"></script>
     ...
