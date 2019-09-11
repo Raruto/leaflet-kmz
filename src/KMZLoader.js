@@ -10,6 +10,7 @@ L.KMZLoader = L.Class.extend({
     bindPopup: true,
     bindTooltip: true,
     debug: 0,
+    keepFront: true,
   },
 
   initialize: function(opts) {
@@ -85,6 +86,18 @@ L.KMZLoader = L.Class.extend({
     return (toGeoJSON || window.toGeoJSON).kml(xmlDoc);
   },
 
+  _keepFront: function(layer) {
+    var keepFront = function(e) {
+      if (this.bringToFront) this.bringToFront();
+    }.bind(layer);
+    layer.on('add', function(e) {
+      this._map.on('baselayerchange', keepFront);
+    });
+    layer.on('remove', function(e) {
+      this._map.off('baselayerchange', keepFront);
+    });
+  },
+
   _kmlToLayer: function(xmlDoc) {
     var data = this._toGeoJSON(xmlDoc);
 
@@ -138,6 +151,7 @@ L.KMZLoader = L.Class.extend({
 
   _onKMZLoaded: function(layer, name) {
     if (this.options.debug) console.log(layer, name);
+    if (this.options.keepFront) this._keepFront(layer);
     if (this.callback) this.callback(layer, name);
   },
 
