@@ -6,20 +6,7 @@ L.KMZParser = L.Class.extend({
   },
 
   load: function(kmzUrl, opts) {
-    var urls = [];
-    var host = 'https://unpkg.com/';
-
-    if (typeof JSZip !== 'function' && typeof window.JSZip !== 'function') {
-      urls.push(host + 'jszip@3.1.5/dist/jszip.min.js');
-    }
-    if (typeof toGeoJSON !== 'object' && typeof window.toGeoJSON !== 'object') {
-      urls.push(host + '@tmcw/togeojson@3.0.1/dist/togeojsons.min.js');
-    }
-    if (typeof geojsonvt !== 'function' && typeof window.geojsonvt !== 'function') {
-      urls.push(host + 'geojson-vt@3.0.0/geojson-vt.js');
-    }
-
-    this._loadAsyncJS(urls); // async download all required JS modules.
+    this._loadAsyncJS(this._requiredJSModules()); // async download all required JS modules.
     this._waitAsyncJS(this._loadKMZ.bind(this, kmzUrl, opts)); // wait until all JS modules are downloaded.
   },
 
@@ -52,6 +39,23 @@ L.KMZParser = L.Class.extend({
       tag.onerror = reject.bind(url);
       document.head.appendChild(tag);
     });
+  },
+
+  _requiredJSModules: function() {
+    var urls = [];
+    var host = 'https://unpkg.com/';
+
+    if (typeof JSZip !== 'function' && typeof window.JSZip !== 'function') {
+      urls.push(host + 'jszip@3.1.5/dist/jszip.min.js');
+    }
+    if (typeof toGeoJSON !== 'object' && typeof window.toGeoJSON !== 'object') {
+      urls.push(host + '@tmcw/togeojson@3.0.1/dist/togeojsons.min.js');
+    }
+    if (typeof geojsonvt !== 'function' && typeof window.geojsonvt !== 'function') {
+      urls.push(host + 'geojson-vt@3.0.0/geojson-vt.js');
+    }
+
+    return urls;
   },
 
   _waitAsyncJS: function(callback) {

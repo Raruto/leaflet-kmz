@@ -12,20 +12,7 @@
     },
 
     load: function(kmzUrl, opts) {
-      var urls = [];
-      var host = 'https://unpkg.com/';
-
-      if (typeof JSZip !== 'function' && typeof window.JSZip !== 'function') {
-        urls.push(host + 'jszip@3.1.5/dist/jszip.min.js');
-      }
-      if (typeof toGeoJSON !== 'object' && typeof window.toGeoJSON !== 'object') {
-        urls.push(host + '@tmcw/togeojson@3.0.1/dist/togeojsons.min.js');
-      }
-      if (typeof geojsonvt !== 'function' && typeof window.geojsonvt !== 'function') {
-        urls.push(host + 'geojson-vt@3.0.0/geojson-vt.js');
-      }
-
-      this._loadAsyncJS(urls); // async download all required JS modules.
+      this._loadAsyncJS(this._requiredJSModules()); // async download all required JS modules.
       this._waitAsyncJS(this._loadKMZ.bind(this, kmzUrl, opts)); // wait until all JS modules are downloaded.
     },
 
@@ -60,6 +47,23 @@
       });
     },
 
+    _requiredJSModules: function() {
+      var urls = [];
+      var host = 'https://unpkg.com/';
+
+      if (typeof JSZip !== 'function' && typeof window.JSZip !== 'function') {
+        urls.push(host + 'jszip@3.1.5/dist/jszip.min.js');
+      }
+      if (typeof toGeoJSON !== 'object' && typeof window.toGeoJSON !== 'object') {
+        urls.push(host + '@tmcw/togeojson@3.0.1/dist/togeojsons.min.js');
+      }
+      if (typeof geojsonvt !== 'function' && typeof window.geojsonvt !== 'function') {
+        urls.push(host + 'geojson-vt@3.0.0/geojson-vt.js');
+      }
+
+      return urls;
+    },
+
     _waitAsyncJS: function(callback) {
       if (this._jsPromise && this._jsPromisePending) {
         this._jsPromise.then(callback);
@@ -84,6 +88,7 @@
       bindPopup: true,
       bindTooltip: true,
       debug: 0,
+      keepFront: true,
     },
 
     initialize: function(opts) {
@@ -159,6 +164,18 @@
       return (toGeoJSON || window.toGeoJSON).kml(xmlDoc);
     },
 
+    _keepFront: function(layer) {
+      var keepFront = function(e) {
+        if (this.bringToFront) this.bringToFront();
+      }.bind(layer);
+      layer.on('add', function(e) {
+        this._map.on('baselayerchange', keepFront);
+      });
+      layer.on('remove', function(e) {
+        this._map.off('baselayerchange', keepFront);
+      });
+    },
+
     _kmlToLayer: function(xmlDoc) {
       var data = this._toGeoJSON(xmlDoc);
 
@@ -212,6 +229,7 @@
 
     _onKMZLoaded: function(layer, name) {
       if (this.options.debug) console.log(layer, name);
+      if (this.options.keepFront) this._keepFront(layer);
       if (this.callback) this.callback(layer, name);
     },
 
