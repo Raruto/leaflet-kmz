@@ -27,11 +27,11 @@
     },
 
     _loadAsyncJS: function(urls) {
-      if (!this._jsPromise && urls.length) {
+      if (!L.KMZParser._jsPromise && urls.length) {
         var promises = urls.map(url => this._loadJS(url));
-        this._jsPromisePending = true;
-        this._jsPromise = Promise.all(promises).then(function() {
-          this._jsPromisePending = false;
+        L.KMZParser._jsPromisePending = true;
+        L.KMZParser._jsPromise = Promise.all(promises).then(function() {
+          L.KMZParser._jsPromisePending = false;
         }.bind(this));
       }
     },
@@ -65,8 +65,8 @@
     },
 
     _waitAsyncJS: function(callback) {
-      if (this._jsPromise && this._jsPromisePending) {
-        this._jsPromise.then(callback);
+      if (L.KMZParser._jsPromise && L.KMZParser._jsPromisePending) {
+        L.KMZParser._jsPromise.then(callback);
       } else {
         callback.call();
       }
