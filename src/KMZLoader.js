@@ -4,7 +4,7 @@
 
 L.KMZLoader = L.Class.extend({
 	options: {
-		renderer: L.canvas({ padding: 0.5 /*, pane: 'overlayPane'*/ }),
+		renderer: true,
 		tiled: true,
 		interactive: true,
 		ballon: true,
@@ -109,7 +109,7 @@ L.KMZLoader = L.Class.extend({
 			this.geojson = L.geoJson(data, {
 				pointToLayer: this._pointToLayer.bind(this),
 				onEachFeature: this._onEachFeature.bind(this),
-				renderer: this.renderer,
+				kmzRenderer: this.renderer,
 			});
 			this.layer = this.geojson;
 		}
@@ -131,7 +131,7 @@ L.KMZLoader = L.Class.extend({
 
 	_pointToLayer: function(feature, latlng) {
 		return new L.KMZMarker(latlng, {
-			renderer: this.renderer,
+			kmzRenderer: this.renderer,
 		});
 		// return new L.marker(latlng, {
 		//   icon: L.icon({
@@ -367,6 +367,27 @@ L.KMZLoader = L.Class.extend({
 		reader.readAsDataURL(blob);
 	},
 
+});
+
+/**
+ * Include a default canvas renderer to each initialized map.
+ */
+var mapProto = L.Map.prototype;
+var getRendererMapProto = mapProto.getRenderer;
+L.Map.addInitHook(function() {
+	this.options.kmzRenderer = L.canvas({ padding: 0.5 /*, pane: 'overlayPane'*/ });
+});
+L.Map.include({
+	getRenderer: function(layer) {
+		if (layer && layer.options && layer.options.kmzRenderer) {
+			if (layer.options.kmzRenderer instanceof L.Renderer)
+				layer.options.renderer = layer.options.kmzRenderer;
+			else if (layer.options.kmzRenderer)
+				layer.options.renderer = this.options.kmzRenderer;
+		}
+		var renderer = getRendererMapProto.call(this, layer);
+		return renderer;
+	},
 });
 
 export var KMZLoader = L.KMZLoader;
