@@ -82,6 +82,7 @@
 
   L.KMZLoader = L.Class.extend({
   	options: {
+  		renderer: L.canvas({ padding: 0.5 /*, pane: 'overlayPane'*/ }),
   		tiled: true,
   		interactive: true,
   		ballon: true,
@@ -89,19 +90,20 @@
   		bindTooltip: true,
   		debug: 0,
   		keepFront: true,
+  		emptyIcon: "data:image/png;" + "base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAFElEQVR4XgXAAQ0AAABAMP1L30IDCPwC/o5WcS4AAAAASUVORK5CYII="
   	},
 
   	initialize: function(opts) {
+
   		L.setOptions(this, opts);
 
+  		this.renderer = this.options.renderer;
   		this.tiled = this.options.tiled; // (Optimized) GeoJSON Vector Tiles ["geojson-vt.js"] library.
   		this.interactive = this.options.interactive; // (Default) Mouse interactions through ["leaflet.js"] layers.
   		this.pointable = this.tiled && !this.interactive && this.options.pointable; // (Experimental) Optimized Mouse interactions through ["geojson-vt.js", "leaflet-pointable.js"] libraries.
-  		this.emptyIcon = 'data:image/png;base64,' + "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAFElEQVR4XgXAAQ0AAABAMP1L30IDCPwC/o5WcS4AAAAASUVORK5CYII=";
+  		this.emptyIcon = this.options.emptyIcon;
   		this.name = this.options.name;
   		this.callback = opts.onKMZLoaded;
-
-  		this._pointRenderer = L.canvas({ padding: 0.5, pane: 'markerPane' });
   	},
 
   	parse: function(kmzUrl) {
@@ -185,6 +187,7 @@
   			this.geojson = L.geoJson(data, {
   				pointToLayer: this._pointToLayer.bind(this),
   				onEachFeature: this._onEachFeature.bind(this),
+  				renderer: this.renderer,
   			});
   			this.layer = this.geojson;
   		}
@@ -205,7 +208,9 @@
   	},
 
   	_pointToLayer: function(feature, latlng) {
-  		return new L.KMZMarker(latlng, { renderer: this._pointRenderer, });
+  		return new L.KMZMarker(latlng, {
+  			renderer: this.renderer,
+  		});
   		// return new L.marker(latlng, {
   		//   icon: L.icon({
   		//   	iconUrl: this.emptyIcon,
