@@ -2,7 +2,7 @@
   typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports, require('leaflet-pointable')) :
   typeof define === 'function' && define.amd ? define(['exports', 'leaflet-pointable'], factory) :
   (global = global || self, factory(global['leaflet-kmz'] = {}));
-}(this, function (exports) { 'use strict';
+}(this, (function (exports) { 'use strict';
 
   L.KMZParser = L.Class.extend({
 
@@ -498,7 +498,9 @@
 
   		icon.onload = function() {
   			ctx.drawImage(icon, p.x - (width / 2.0), p.y - (height / 2.0), width, height);
-  			renderer._drawnLayers[layer._leaflet_id] = layer;
+  			// Removed in Leaflet 1.4.0
+  			if (renderer._drawnLayers) renderer._drawnLayers[layer._leaflet_id] = layer;
+  			else renderer._layers[layer._leaflet_id] = layer;
   		};
   		icon.src = this._iconUrl;
   	}
@@ -805,5 +807,5 @@
 
   Object.defineProperty(exports, '__esModule', { value: true });
 
-}));
+})));
 //# sourceMappingURL=leaflet-kmz-src.js.map
