@@ -23,7 +23,7 @@
 	<!-- <script src="https://unpkg.com/geojson-vt@3.0.0/geojson-vt.js"></script> -->
 
 	<!-- Leaflet-KMZ -->
-	<script src="https://unpkg.com/leaflet-kmz@0.3.0/dist/leaflet-kmz.js"></script>
+	<script src="../dist/leaflet-kmz.js"></script>
 
 	<style>
 		html,
@@ -58,7 +58,7 @@
 				control.addOverlay(layer, name);
 				layer.addTo(map);
 			},
-			interactive: false, // Disable default "leaflet.js" mouse layer interactions.
+			// interactive: false, // Disable default "leaflet.js" mouse layer interactions.
 			pointable: true,    // Enable optimized "geojson-vt.js" mouse layer interactions.
 		});
 
