@@ -25,6 +25,10 @@ L.KMZMarker = L.CircleMarker.extend({
 		var ctx = renderer._ctx;
 
 		ctx.drawImage(icon, p.x, p.y, icon.width, icon.height);
+
+		// Removed in Leaflet 1.4.0
+		// if (renderer._drawnLayers) renderer._drawnLayers[layer._leaflet_id] = layer;
+		// else renderer._layers[layer._leaflet_id] = layer;
 	}
 });
 

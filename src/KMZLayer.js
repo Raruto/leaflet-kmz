@@ -6,6 +6,7 @@ export const KMZLayer = L.KMZLayer = L.FeatureGroup.extend({
 		ballon: true,
 		bindPopup: true,
 		bindTooltip: true,
+		preferCanvas: false,
 	},
 
 	initialize: function(kmzUrl, options) {
@@ -61,7 +62,7 @@ export const KMZLayer = L.KMZLayer = L.FeatureGroup.extend({
 	},
 
 	_geometryToLayer: function(data) {
-		var preferCanvas = (this._map && this._map.options.preferCanvas);
+		var preferCanvas = this._map ? this._map.options.preferCanvas : this.options.preferCanvas;
 		var layer = L.geoJson(data, {
 			pointToLayer: (feature, latlng) => {
 				if (preferCanvas) {
