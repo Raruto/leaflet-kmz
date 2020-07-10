@@ -41,8 +41,6 @@
   },
   "dependencies": {
     "@tmcw/togeojson": "^3.2.0",
-    "geojson-vt": "^3.2.1",
-    "jszip": "^3.2.2",
-    "leaflet-pointable": "0.0.3"
+    "jszip": "^3.5.0"
   }
 }

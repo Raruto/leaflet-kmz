@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<title>leaflet-kmz</title>
+	<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+
+	<!-- Leaflet (JS/CSS) -->
+	<script src="https://unpkg.com/leaflet@1.6.0/dist/leaflet-src.js"></script>
+	<script src="https://unpkg.com/leaflet-ui@0.4.5/dist/leaflet-ui-src.js"></script>
+
+	<!-- Leaflet-Pointable -->
+	<script src="https://unpkg.com/leaflet-pointable@0.0.4/leaflet-pointable.js"></script>
+
+	<!-- Leaflet-KMZ -->
+	<script src="https://unpkg.com/leaflet-kmz@1.0.0/dist/leaflet-kmz-src.js"></script>
+
+	<style>
+		html,
+		body,
+		.map {
+			margin: 0;
+			padding: 0;
+			width: 100%;
+			height: 100%;
+		}
+	</style>
+</head>
+
+<body>
+
+	<div id="map" class="map"></div>
+
+	<script>
+		var map = L.map('map', {
+			center: [43.5978, 12.7059],
+			zoom: 5,
+			mapTypeId: 'topo',
+			gestureHandling: false,
+			searchControl: false,
+			locateControl: false,
+			pegmanControl: false,
+			fullscreenControl: false,
+			preferCanvas: true,
+			plugins: [
+				"geojson-vt@3.2.1/geojson-vt.js",
+				"leaflet.vectorgrid@1.3.0/dist/Leaflet.VectorGrid.js"
+			]
+		});
+
+		map.on('plugins_loaded', function() {
+
+			var control = L.control.layers(null, null, {
+				collapsed: false
+			}).addTo(map);
+
+			// Instantiate KMZ parser (async)
+			var kmz = L.kmzLayer(null, {
+				interactive: true, // Disable default "leaflet.js" mouse layer interactions.
+				// pointable: true,
+				tiled: true,
+				geometryToLayer: function(data) {
+					var layer = L.featureGroup();
+					var points = [];
+					var overlays = [];
+					var options = L.extend({}, this.options, data.properties);
+
+					var geojson = L.geoJson(data, {
+						pointToLayer: (feature, latlng) =>
+							L.kmzMarker(latlng, {
+								iconUrl: data.properties.icons[feature.properties.icon],
+								iconSize: [28, 28],
+								iconAnchor: [14, 14],
+								interactive: this.options.interactive,
+							}),
+						style: (feature) => {
+							var styles = {};
+							var prop = feature.properties;
+
+							if (this.options.tiled) {
+								return {
+									weight: 1,
+									opacity: 0,
+									fillOpacity: 0,
+								};
+							}
+
+							if (prop.stroke) {
+								styles.stroke = true;
+								styles.color = prop.stroke;
+							}
+							if (prop.fill) {
+								styles.fill = true;
+								styles.fillColor = prop.fill;
+							}
+							if (prop["stroke-opacity"]) {
+								styles.opacity = prop["stroke-opacity"];
+							}
+							if (prop["fill-opacity"]) {
+								styles.fillOpacity = prop["fill-opacity"];
+							}
+							if (prop["stroke-width"]) {
+								styles.weight = prop["stroke-width"] * 1.05;
+							}
+
+							return styles;
+						},
+						onEachFeature: (feature, layer) => {
+							switch (feature.geometry.type) {
+								case 'Point':
+									points.push(feature);
+									break;
+								case 'LineString':
+								case 'Polygon':
+								case 'GeometryCollection':
+									overlays.push(feature);
+									break;
+							}
+
+							if (!this.options.ballon) return;
+
+							var prop = feature.properties;
+							var name = prop.name || "";
+							var desc = prop.description || "";
+
+							if (name || desc) {
+								if (this.options.bindPopup) {
+									layer.bindPopup('<div>' + '<b>' + name + '</b>' + '<br>' + desc + '</div>');
+								}
+								if (this.options.bindTooltip) {
+									layer.bindTooltip('<b>' + name + '</b>', {
+										direction: 'auto',
+										sticky: true,
+									});
+								}
+							}
+						},
+						interactive: this.options.interactive,
+					});
+
+					if (this.options.tiled) {
+
+						// Prevent leaflet from treating vector canvas points as real markers
+						PointSymbolizer.prototype.getLatLng = null;
+
+						var vectorOptions = {
+							maxZoom: 24,
+							extent: 4096,
+							buffer: 256,
+							generateId: true,
+							rendererFactory: L.canvas.tile,
+							vectorTileLayerStyles: {
+								sliced: (prop, zoom) => {
+									var styles = {};
+
+									if (prop.icon) {
+										styles.icon = L.icon({
+											iconUrl: data.properties.icons[prop.icon],
+											iconSize: [28, 28],
+											iconAnchor: [14, 14],
+										});
+									}
+									if (prop.stroke) {
+										styles.stroke = true;
+										styles.color = prop.stroke;
+									}
+									if (prop.fill) {
+										styles.fill = true;
+										styles.fillColor = prop.fill;
+									}
+									if (prop["stroke-opacity"]) {
+										styles.opacity = prop["stroke-opacity"];
+									}
+									if (prop["fill-opacity"]) {
+										styles.fillOpacity = prop["fill-opacity"];
+									}
+									if (prop["stroke-width"]) {
+										styles.weight = prop["stroke-width"] * 1.05;
+									}
+
+									return styles;
+								}
+							}
+							// interactive: true,
+							// pointable: true,
+						};
+
+						overlays = L.vectorGrid.slicer({
+								type: 'FeatureCollection',
+								features: overlays,
+								properties: data.properties
+							},
+							L.extend({}, vectorOptions, {
+								pane: 'overlayPane',
+								className: 'leaflet-kmz-overlays'
+							})
+						);
+						points = L.vectorGrid.slicer({
+								type: 'FeatureCollection',
+								features: points,
+								properties: data.properties
+							},
+							L.extend({}, vectorOptions, {
+								pane: 'markerPane',
+								className: 'leaflet-kmz-markers'
+							})
+						);
+						layer.addLayer(overlays);
+						layer.addLayer(points);
+					}
+
+					if (this.options.interactive) {
+						layer.addLayer(geojson);
+					}
+
+					return layer;
+				},
+			});
+
+			kmz.on('load', function(e) {
+				control.addOverlay(e.layer, e.name);
+				e.layer.addTo(map);
+			});
+
+			// Add remote KMZ files as layers (NB if they are 3rd-party servers, they MUST have CORS enabled)
+			kmz.add('regions.kmz');
+			kmz.add('capitals.kmz');
+			kmz.add('globe.kmz');
+			kmz.add('multigeometry.kmz');
+
+		});
+	</script>
+
+	<a href="https://github.com/Raruto/leaflet-kmz" class="view-on-github" style="position: fixed;top: 10px;left: calc(50% - 60px);z-index: 9999;"> <img alt="View on Github" src="https://raruto.github.io/img/view-on-github.png" title="View on Github"
+		 width="163"> </a>
+
+</body>
+
+</html>

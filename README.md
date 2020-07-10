@@ -3,8 +3,9 @@ A KMZ file loader for Leaflet Maps
 
 _For a working example see one of the following demos:_
 
-- [multiple kmz files](https://raruto.github.io/leaflet-kmz/examples/leaflet-kmz.html)
-- [mouse interactions](https://raruto.github.io/leaflet-kmz/examples/leaflet-kmz_mouse-interactions.html)
+- [kmz layers](https://raruto.github.io/leaflet-kmz/examples/leaflet-kmz.html)
+- [vector grid](https://raruto.github.io/leaflet-kmz/examples/leaflet-kmz_gridlayer.html)
+
 
 ---
 
@@ -16,8 +17,8 @@ _For a working example see one of the following demos:_
     ...
     <style> html, body, #map { height: 100%; width: 100%; padding: 0; margin: 0; } </style>
     <!-- Leaflet (JS/CSS) -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.3.4/dist/leaflet.css">
-    <script src="https://unpkg.com/leaflet@1.3.4/dist/leaflet.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.6.0/dist/leaflet.css">
+    <script src="https://unpkg.com/leaflet@1.6.0/dist/leaflet.js"></script>
     <!-- Leaflet-KMZ -->
     <script src="https://unpkg.com/leaflet-kmz@latest/dist/leaflet-kmz.js"></script>
     ...
@@ -34,7 +35,9 @@ _For a working example see one of the following demos:_
 3. **create your first simple “leaflet-kmz” slippy map**
     ```html
     <script>
-      var map = L.map('map');
+      var map = L.map('map', {
+        preferCanvas: true // recommended when loading large layers.
+      });
       map.setView(new L.LatLng(43.5978, 12.7059), 5);
 
       var OpenTopoMap = L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
@@ -44,17 +47,18 @@ _For a working example see one of the following demos:_
       });
       OpenTopoMap.addTo(map);
 
-      // Instantiate KMZ parser (async)
-      var kmzParser = new L.KMZParser({
-        onKMZLoaded: function(layer, name) {
-          control.addOverlay(layer, name);
-          layer.addTo(map);
-        }
+      // Instantiate KMZ layer (async)
+      var kmz = L.kmzLayer().addTo(map);
+
+      kmz.on('load', function(e) {
+        control.addOverlay(e.layer, e.name);
+        // e.layer.addTo(map);
       });
+
       // Add remote KMZ files as layers (NB if they are 3rd-party servers, they MUST have CORS enabled)
-      kmzParser.load('https://raruto.github.io/leaflet-kmz/examples/regions.kmz');
-      kmzParser.load('https://raruto.github.io/leaflet-kmz/examples/capitals.kmz');
-      kmzParser.load('https://raruto.github.io/leaflet-kmz/examples/globe.kmz');
+      kmz.load('https://raruto.github.io/leaflet-kmz/examples/regions.kmz');
+      kmz.load('https://raruto.github.io/leaflet-kmz/examples/capitals.kmz');
+      kmz.load('https://raruto.github.io/leaflet-kmz/examples/globe.kmz');
 
       var control = L.control.layers(null, null, { collapsed:false }).addTo(map);
     </script>
@@ -66,7 +70,7 @@ _For a working example see one of the following demos:_
 
 ---
 
-**Compatibile with:** leaflet@1.3.4, jszip@3.1.5, @tmcw/togeojson@3.0.1, geojson-vt@3.0.0, leaflet-pointable@0.0.3
+**Compatibile with:** leaflet@1.6.0, jszip@3.2.0, @tmcw/togeojson@4.1.0
 
 ---
 
