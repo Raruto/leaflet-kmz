@@ -135,6 +135,7 @@
 			ballon: true,
 			bindPopup: true,
 			bindTooltip: true,
+			preferCanvas: false,
 		},
 
 		initialize: function(kmzUrl, options) {
@@ -190,7 +191,7 @@
 		},
 
 		_geometryToLayer: function(data) {
-			var preferCanvas = (this._map && this._map.options.preferCanvas);
+			var preferCanvas = this._map ? this._map.options.preferCanvas : this.options.preferCanvas;
 			var layer = L.geoJson(data, {
 				pointToLayer: (feature, latlng) => {
 					if (preferCanvas) {
@@ -305,6 +306,10 @@
 			var ctx = renderer._ctx;
 
 			ctx.drawImage(icon, p.x, p.y, icon.width, icon.height);
+
+			// Removed in Leaflet 1.4.0
+			// if (renderer._drawnLayers) renderer._drawnLayers[layer._leaflet_id] = layer;
+			// else renderer._layers[layer._leaflet_id] = layer;
 		}
 	});
 
