@@ -141,9 +141,7 @@
 		initialize: function(kmzUrl, options) {
 			L.extend(this.options, options);
 
-			this.tiled = this.options.tiled; // (Optimized) GeoJSON Vector Tiles ["geojson-vt.js"] library.
-			this.interactive = this.options.interactive; // (Default) Mouse interactions through ["leaflet.js"] layers.
-			this.pointable = this.tiled && !this.interactive && this.options.pointable; // (Experimental) Optimized Mouse interactions through ["geojson-vt.js", "leaflet-pointable.js"] libraries.
+			if (L.Browser.mobile) this.options.bindTooltip = false;
 
 			this._layers = {};
 
@@ -209,6 +207,7 @@
 							iconSize: [28, 28],
 							iconAnchor: [14, 14],
 						}),
+						interactive: this.options.interactive,
 					});
 				},
 				style: (feature) => {
