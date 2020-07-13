@@ -6,18 +6,23 @@
  *
  */
 L.KMZMarker = L.CircleMarker.extend({
-	initialize: function(latlng, options) {
-		L.CircleMarker.prototype.initialize.call(this, latlng, options);
-		var icon = this._icon = new Image(options.iconSize[0], options.iconSize[1]);
-		icon.anchor = [icon.width / 2.0, icon.height / 2.0];
-		icon.src = this.options.iconUrl;
-	},
+	// initialize: function(latlng, options) {
+	// 	L.CircleMarker.prototype.initialize.call(this, latlng, options);
+	// },
 	_updatePath: function() {
 		var renderer = this._renderer;
 		var icon = this._icon;
 		var layer = this;
 
-		if (!icon.complete || !renderer._drawing || layer._empty()) {
+		// if (!icon.complete)
+		if (!icon){
+			icon = this._icon = new Image(this.options.iconSize[0], this.options.iconSize[1]);
+			icon.anchor = [icon.width / 2.0, icon.height / 2.0];
+			icon.onload = () => this._updatePath;
+			icon.src = this.options.iconUrl;
+		}
+
+		if (!renderer._drawing || layer._empty()) {
 			return;
 		}
 
