@@ -1,6 +1,6 @@
 {
   "name": "leaflet-kmz",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "A KMZ file loader for Leaflet Maps",
   "main": "dist/leaflet-kmz.js",
   "module": "src/index.js",
