@@ -14,26 +14,28 @@ L.KMZMarker = L.CircleMarker.extend({
 		var icon = this._icon;
 		var layer = this;
 
-		// if (!icon.complete)
-		if (!icon){
-			icon = this._icon = new Image(this.options.iconSize[0], this.options.iconSize[1]);
-			icon.anchor = [icon.width / 2.0, icon.height / 2.0];
-			icon.onload = () => this._updatePath;
-			icon.src = this.options.iconUrl;
-		}
-
 		if (!renderer._drawing || layer._empty()) {
 			return;
 		}
 
-		var p = layer._point.subtract(icon.anchor);
-		var ctx = renderer._ctx;
+		// if (icon.complete)
+		if (icon) {
+			icon.drawImage();
+		} else {
+			icon = this._icon = new Image(this.options.iconSize[0], this.options.iconSize[1]);
+			icon.anchor = [icon.width / 2.0, icon.height / 2.0];
+			icon.onload = icon.drawImage = () => {
+				var p = layer._point.subtract(icon.anchor);
+				var ctx = renderer._ctx;
 
-		ctx.drawImage(icon, p.x, p.y, icon.width, icon.height);
+				ctx.drawImage(icon, p.x, p.y, icon.width, icon.height);
 
-		// Removed in Leaflet 1.4.0
-		// if (renderer._drawnLayers) renderer._drawnLayers[layer._leaflet_id] = layer;
-		// else renderer._layers[layer._leaflet_id] = layer;
+				// Removed in Leaflet 1.4.0
+				// if (renderer._drawnLayers) renderer._drawnLayers[layer._leaflet_id] = layer;
+				// else renderer._layers[layer._leaflet_id] = layer;
+			};
+			icon.src = this.options.iconUrl;
+		}
 	}
 });
 
