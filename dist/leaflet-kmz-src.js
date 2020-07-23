@@ -158,7 +158,7 @@
 		},
 
 		_load: function(url) {
-			return loadFile(url).then((data) => this._parse(data, { name: getFileName(url) }));
+			return loadFile(url).then((data) => this._parse(data, { name: getFileName(url), icons: {} }));
 		},
 
 		_parse: function(data, props) {
@@ -172,29 +172,30 @@
 
 				var kmlString = kmzFiles[kmlDoc];
 				// cache all images with their base64 encoding
-				var icons = images.reduce((obj, item) => {
+				props.icons = images.reduce((obj, item) => {
 					obj[item] = kmzFiles[item];
 					return obj;
 				}, {});
 
-				this._parseKML(kmlString, L.extend({}, props, { icons: icons }));
+				this._parseKML(kmlString, props);
 			});
 		},
 
 		_parseKML: function(data, props) {
-			var geojson = toGeoJSON(data, props);
-			var layer = (this.options.geometryToLayer || this._geometryToLayer).call(this, geojson);
+			var xml = toXML(data);
+			var geojson = toGeoJSON(xml, props);
+			var layer = (this.options.geometryToLayer || this._geometryToLayer).call(this, geojson, xml);
 			this.addLayer(layer);
 			this.fire('load', { layer: layer, name: geojson.properties.name });
 		},
 
-		_geometryToLayer: function(data) {
+		_geometryToLayer: function(data, xml) {
 			var preferCanvas = this._map ? this._map.options.preferCanvas : this.options.preferCanvas;
 			var layer = L.geoJson(data, {
 				pointToLayer: (feature, latlng) => {
 					if (preferCanvas) {
 						return L.kmzMarker(latlng, {
-							iconUrl: data.properties.icons[feature.properties.icon],
+							iconUrl: data.properties.icons[feature.properties.icon] || feature.properties.icon,
 							iconSize: [28, 28],
 							iconAnchor: [14, 14],
 							interactive: this.options.interactive,
@@ -203,7 +204,7 @@
 					// TODO: handle L.svg renderer within the L.KMZMarker class?
 					return L.marker(latlng, {
 						icon: L.icon({
-							iconUrl: data.properties.icons[feature.properties.icon],
+							iconUrl: data.properties.icons[feature.properties.icon] || feature.properties.icon,
 							iconSize: [28, 28],
 							iconAnchor: [14, 14],
 						}),
