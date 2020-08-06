@@ -62,6 +62,7 @@ export const KMZLayer = L.KMZLayer = L.FeatureGroup.extend({
 
 	_geometryToLayer: function(data, xml) {
 		var preferCanvas = this._map ? this._map.options.preferCanvas : this.options.preferCanvas;
+		// parse GeoJSON
 		var layer = L.geoJson(data, {
 			pointToLayer: (feature, latlng) => {
 				if (preferCanvas) {
@@ -127,7 +128,14 @@ export const KMZLayer = L.KMZLayer = L.FeatureGroup.extend({
 			},
 			interactive: this.options.interactive,
 		});
-
+		// parse GroundOverlays
+		let el = xml.getElementsByTagName('GroundOverlay');
+		for (let l, k = 0; k < el.length; k++) {
+			l = _.parseGroundOverlay(el[k], data.properties);
+			if (l) {
+				layer.addLayer(l);
+			}
+		}
 		return layer;
 	},
 

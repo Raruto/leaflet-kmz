@@ -79,6 +79,43 @@ export function loadJS(url) {
 	});
 }
 
+export function parseLatLonBox(xml) {
+	let box = L.latLngBounds([
+		xml.getElementsByTagName('south')[0].childNodes[0].nodeValue,
+		xml.getElementsByTagName('west')[0].childNodes[0].nodeValue
+	], [
+		xml.getElementsByTagName('north')[0].childNodes[0].nodeValue,
+		xml.getElementsByTagName('east')[0].childNodes[0].nodeValue
+	]);
+	let rotation = xml.getElementsByTagName('rotation')[0];
+	if (rotation !== undefined) {
+		rotation = parseFloat(rotation.childNodes[0].nodeValue);
+	}
+	return [box, rotation];
+}
+
+export function parseGroundOverlay(xml, props) {
+	let [bounds, rotation] = parseLatLonBox(xml.getElementsByTagName('LatLonBox')[0]);
+	let href = xml.getElementsByTagName('href')[0];
+	let color = xml.getElementsByTagName('color')[0];
+	let icon = xml.getElementsByTagName('Icon')[0];
+	let options = {};
+	if (!href && icon) {
+		href = icon.getElementsByTagName('href')[0];
+	}
+	href = href.childNodes[0].nodeValue;
+	href = props.icons[href] || href;
+	if (color) {
+		color = color.childNodes[0].nodeValue;
+		options.opacity = parseInt(color.substring(0, 2), 16) / 255.0;
+		options.color = '#' + color.substring(6, 8) + color.substring(4, 6) + color.substring(2, 4);
+	}
+	if (rotation) {
+		options.rotation = rotation;
+	}
+	return new L.KMZImageOverlay(href, bounds, { opacity: options.opacity, angle: options.rotation });
+}
+
 export function toGeoJSON(data, props) {
 	var xml = data instanceof XMLDocument ? data : toXML(data);
 	var json = window.toGeoJSON.kml(xml);

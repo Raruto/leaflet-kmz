@@ -85,6 +85,43 @@
 		});
 	}
 
+	function parseLatLonBox(xml) {
+		let box = L.latLngBounds([
+			xml.getElementsByTagName('south')[0].childNodes[0].nodeValue,
+			xml.getElementsByTagName('west')[0].childNodes[0].nodeValue
+		], [
+			xml.getElementsByTagName('north')[0].childNodes[0].nodeValue,
+			xml.getElementsByTagName('east')[0].childNodes[0].nodeValue
+		]);
+		let rotation = xml.getElementsByTagName('rotation')[0];
+		if (rotation !== undefined) {
+			rotation = parseFloat(rotation.childNodes[0].nodeValue);
+		}
+		return [box, rotation];
+	}
+
+	function parseGroundOverlay(xml, props) {
+		let [bounds, rotation] = parseLatLonBox(xml.getElementsByTagName('LatLonBox')[0]);
+		let href = xml.getElementsByTagName('href')[0];
+		let color = xml.getElementsByTagName('color')[0];
+		let icon = xml.getElementsByTagName('Icon')[0];
+		let options = {};
+		if (!href && icon) {
+			href = icon.getElementsByTagName('href')[0];
+		}
+		href = href.childNodes[0].nodeValue;
+		href = props.icons[href] || href;
+		if (color) {
+			color = color.childNodes[0].nodeValue;
+			options.opacity = parseInt(color.substring(0, 2), 16) / 255.0;
+			options.color = '#' + color.substring(6, 8) + color.substring(4, 6) + color.substring(2, 4);
+		}
+		if (rotation) {
+			options.rotation = rotation;
+		}
+		return new L.KMZImageOverlay(href, bounds, { opacity: options.opacity, angle: options.rotation });
+	}
+
 	function toGeoJSON(data, props) {
 		var xml = data instanceof XMLDocument ? data : toXML(data);
 		var json = window.toGeoJSON.kml(xml);
@@ -191,6 +228,7 @@
 
 		_geometryToLayer: function(data, xml) {
 			var preferCanvas = this._map ? this._map.options.preferCanvas : this.options.preferCanvas;
+			// parse GeoJSON
 			var layer = L.geoJson(data, {
 				pointToLayer: (feature, latlng) => {
 					if (preferCanvas) {
@@ -256,7 +294,14 @@
 				},
 				interactive: this.options.interactive,
 			});
-
+			// parse GroundOverlays
+			let el = xml.getElementsByTagName('GroundOverlay');
+			for (let l, k = 0; k < el.length; k++) {
+				l = parseGroundOverlay(el[k], data.properties);
+				if (l) {
+					layer.addLayer(l);
+				}
+			}
 			return layer;
 		},
 
@@ -325,6 +370,41 @@
 	};
 
 	var KMZMarker = L.KMZMarker;
+
+	/**
+	 * Copyright (c) 2011-2015, Pavel Shramov, Bruno Bergot - MIT licence
+	 *
+	 * adapted from: https://github.com/windycom/leaflet-kml/L.KML.js
+	 */
+	L.KMZImageOverlay = L.ImageOverlay.extend({
+		options: {
+			angle: 0
+		},
+		_reset: function() {
+			L.ImageOverlay.prototype._reset.call(this);
+			this._rotate();
+		},
+		_animateZoom: function(e) {
+			L.ImageOverlay.prototype._animateZoom.call(this, e);
+			this._rotate();
+		},
+		_rotate: function() {
+			if (L.DomUtil.TRANSFORM) {
+				// use the CSS transform rule if available
+				this._image.style[L.DomUtil.TRANSFORM] += ' rotate(' + this.options.angle + 'deg)';
+			} else if (L.Browser.ie) {
+				// fallback for IE6, IE7, IE8
+				var rad = this.options.angle * (Math.PI / 180),
+					costheta = Math.cos(rad),
+					sintheta = Math.sin(rad);
+				this._image.style.filter += ' progid:DXImageTransform.Microsoft.Matrix(sizingMethod=\'auto expand\', M11=' +
+					costheta + ', M12=' + (-sintheta) + ', M21=' + sintheta + ', M22=' + costheta + ')';
+			}
+		},
+		getBounds: function() {
+			return this._bounds;
+		}
+	});
 
 	exports.KMZLayer = KMZLayer;
 	exports.KMZMarker = KMZMarker;

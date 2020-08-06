@@ -47,7 +47,19 @@
 		});
 
 		// Instantiate KMZ parser (async)
-		var kmz = L.kmzLayer().addTo(map);;
+		var kmz = L.kmzLayer(null, {
+			// geometryToLayer: function(data, xml) {
+			// 	let layer = this._geometryToLayer(data, xml);
+			// 	let el = xml.getElementsByTagName('GroundOverlay');
+			// 	for (let k = 0; k < el.length; k++) {
+			// 		l = _.parseGroundOverlay(el[k], data.properties);
+			// 		if (l) {
+			// 			layer.addLayer(l);
+			// 		}
+			// 	}
+			// 	return layer;
+			// }
+		}).addTo(map);
 
 		kmz.on('load', function(e) {
 			control.addOverlay(e.layer, e.name);
@@ -59,44 +71,45 @@
 		kmz.add('../examples/capitals.kmz');
 		kmz.add('../examples/globe.kmz');
 		kmz.add('../examples/multigeometry.kmz');
+		kmz.add('../examples/etna.kmz');
 
-		var opts = {
-			elevationControl: {
-				url: "https://raruto.github.io/leaflet-elevation/examples/via-emilia.gpx",
-				options: {
-					theme: "lightblue-theme",
-					collapsed: false,
-					detached: false,
-					summary: "inline",
-					followMarker: false,
-					position: 'bottomleft',
-					collapsed: true,
-				},
-			},
-			layersControl: {
-				options: {
-					collapsed: false,
-				},
-			},
-		};
+		// var opts = {
+		// 	elevationControl: {
+		// 		url: "https://raruto.github.io/leaflet-elevation/examples/via-emilia.gpx",
+		// 		options: {
+		// 			theme: "lightblue-theme",
+		// 			collapsed: false,
+		// 			detached: false,
+		// 			summary: "inline",
+		// 			followMarker: false,
+		// 			position: 'bottomleft',
+		// 			collapsed: true,
+		// 		},
+		// 	},
+		// 	layersControl: {
+		// 		options: {
+		// 			collapsed: false,
+		// 		},
+		// 	},
+		// };
 
-		var controlElevation;
+		// var controlElevation;
 
-		map.on('plugins_loaded', function() {
-
-			controlElevation = L.control.elevation(opts.elevationControl.options);
-			var controlLayer = L.control.layers(null, null, opts.layersControl.options);
-
-			controlElevation.addTo(map);
-			controlLayer.addTo(map);
-
-			controlElevation.on('eledata_loaded', function(e) {
-				controlLayer.addOverlay(e.layer, e.name);
-			});
-
-			controlElevation.load(opts.elevationControl.url);
-
-		});
+		// map.on('plugins_loaded', function() {
+		//
+		// 	controlElevation = L.control.elevation(opts.elevationControl.options);
+		// 	var controlLayer = L.control.layers(null, null, opts.layersControl.options);
+		//
+		// 	controlElevation.addTo(map);
+		// 	controlLayer.addTo(map);
+		//
+		// 	controlElevation.on('eledata_loaded', function(e) {
+		// 		controlLayer.addOverlay(e.layer, e.name);
+		// 	});
+		//
+		// 	controlElevation.load(opts.elevationControl.url);
+		//
+		// });
 
 		var control = L.control.layers(null, null, {
 			collapsed: false
@@ -104,7 +117,7 @@
 	</script>
 
 	<a href="https://github.com/Raruto/leaflet-kmz" class="view-on-github" style="position: fixed;top: 10px;left: calc(50% - 60px);z-index: 9999;"> <img alt="View on Github" src="https://raruto.github.io/img/view-on-github.png" title="View on Github"
-		 width="163"> </a>
+		  width="163"> </a>
 
 </body>
 
