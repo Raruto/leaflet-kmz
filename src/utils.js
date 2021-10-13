@@ -124,7 +124,19 @@ export function toGeoJSON(data, props) {
 }
 
 export function toXML(data) {
-	var text = data instanceof ArrayBuffer ? String.fromCharCode.apply(null, new Uint8Array(data)) : data;
+	var text;
+	if (data instanceof ArrayBuffer) {
+		text = String.fromCharCode.apply(null, new Uint8Array(data));
+		if(text.startsWith("<?xml")){
+			var prologContent = text.substring(0, text.indexOf("?>"));
+			let matchEnc = prologContent.match(/encoding\s*=\s*["'](.*)["']/i);
+			if (matchEnc){
+				text = new TextDecoder(matchEnc[1]).decode(data);
+			}
+		}
+	} else {
+		text = data;
+	}
 	return (new DOMParser()).parseFromString(text, 'text/xml');
 }
 
