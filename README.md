@@ -1,4 +1,8 @@
 # leaflet-kmz
+
+[![NPM version](https://img.shields.io/npm/v/leaflet-kmz.svg?color=red)](https://www.npmjs.com/package/leaflet-kmz)
+[![License](https://img.shields.io/badge/license-GPL%203-blue.svg?style=flat)](LICENSE)
+
 A KMZ file loader for Leaflet Maps
 
 _For a working example see one of the following demos:_
