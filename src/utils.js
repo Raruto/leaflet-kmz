@@ -11,7 +11,7 @@ export function loadFile(url) {
 			if (xhr.readyState === 4 && (xhr.status === 200 || xhr.status === 0)) {
 				resolve(xhr.response || xhr.responseText);
 			} else {
-				console.warn("Error " + xhr.status + " while fetching remote file: " + url);
+				resolve('');
 			}
 		};
 		xhr.onerror = () => reject("Error " + xhr.status + " while fetching remote file: " + url);
@@ -124,8 +124,15 @@ export function toGeoJSON(data, props) {
 }
 
 export function toXML(data) {
-	var text = data instanceof ArrayBuffer ? String.fromCharCode.apply(null, new Uint8Array(data)) : data;
-	return (new DOMParser()).parseFromString(text, 'text/xml');
+	var text = data;
+	if (data instanceof ArrayBuffer) {
+		text = String.fromCharCode.apply(null, new Uint8Array(data));
+		var encoding = text.substring(0, text.indexOf("?>")).match(/encoding\s*=\s*["'](.*)["']/i);
+		if (encoding) {
+			text = new TextDecoder(encoding[1]).decode(data);
+		}
+	}
+	return text ? (new DOMParser()).parseFromString(text, 'text/xml') : document.implementation.createDocument(null, "kml");;
 }
 
 export function unzip(folder) {
