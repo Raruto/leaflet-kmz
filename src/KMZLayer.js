@@ -23,13 +23,13 @@ export const KMZLayer = L.KMZLayer = L.FeatureGroup.extend({
 		this.load(kmzUrl);
 	},
 
-	load: function(kmzUrl) {
+	load: function(kmzUrl, options) {
 		L.KMZLayer._jsPromise = _.lazyLoader(this._requiredJSModules(), L.KMZLayer._jsPromise)
-			.then(() => this._load(kmzUrl));
+			.then(() => this._load(kmzUrl, options));
 	},
 
-	_load: function(url) {
-		return _.loadFile(url).then((data) => this._parse(data, { name: _.getFileName(url), icons: {} }));
+	_load: function(url, options) {
+		return _.loadFile(url).then((data) => this._parse(data, { name: _.getFileName(url), icons: {}, options: options }));
 	},
 
 	_parse: function(data, props) {
