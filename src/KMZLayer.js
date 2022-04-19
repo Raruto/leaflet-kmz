@@ -19,17 +19,17 @@ export const KMZLayer = L.KMZLayer = L.FeatureGroup.extend({
 		if (kmzUrl) this.load(kmzUrl);
 	},
 
-	add: function(kmzUrl) {
-		this.load(kmzUrl);
+	add: function(kmzUrl, name) {
+		this.load(kmzUrl, name);
 	},
 
-	load: function(kmzUrl) {
+	load: function(kmzUrl, name) {
 		L.KMZLayer._jsPromise = _.lazyLoader(this._requiredJSModules(), L.KMZLayer._jsPromise)
-			.then(() => this._load(kmzUrl));
+			.then(() => this._load(kmzUrl, name));
 	},
 
-	_load: function(url) {
-		return _.loadFile(url).then((data) => this._parse(data, { name: _.getFileName(url), icons: {} }));
+	_load: function(url, name) {
+		return _.loadFile(url).then((data) => this._parse(data, { name: (name ? name : _.getFileName(url)), icons: {} }));
 	},
 
 	_parse: function(data, props) {
