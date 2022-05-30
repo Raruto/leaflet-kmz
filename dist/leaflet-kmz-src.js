@@ -197,7 +197,14 @@
 
 		load: function(kmzUrl) {
 			L.KMZLayer._jsPromise = lazyLoader(this._requiredJSModules(), L.KMZLayer._jsPromise)
-				.then(() => this._load(kmzUrl));
+				.then(() => this._load(kmzUrl))
+				.catch((error) => {
+					// Prevent a previously rejected promise from not allowing new promises to be made 
+					L.KMZLayer._jsPromise = undefined;
+					throw error;
+				});
+			// Return the promise so that the application can act on an error
+			return L.KMZLayer._jsPromise;
 		},
 
 		_load: function(url) {
