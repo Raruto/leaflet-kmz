@@ -126,7 +126,9 @@ export function toGeoJSON(data, props) {
 export function toXML(data) {
 	var text = data;
 	if (data instanceof ArrayBuffer) {
-		text = String.fromCharCode.apply(null, new Uint8Array(data));
+		text = new Uint8Array(data).reduce(function (data, byte) {
+			return data + String.fromCharCode(byte);
+		}, '');
 		var encoding = text.substring(0, text.indexOf("?>")).match(/encoding\s*=\s*["'](.*)["']/i);
 		if (encoding) {
 			text = new TextDecoder(encoding[1]).decode(data);
