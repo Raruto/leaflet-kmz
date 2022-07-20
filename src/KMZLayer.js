@@ -28,6 +28,10 @@ export const KMZLayer = L.KMZLayer = L.FeatureGroup.extend({
 			.then(() => this._load(kmzUrl));
 	},
 
+	parse: function(data, props) {
+		this._parse(data, props);
+	},
+
 	_load: function(url) {
 		return _.loadFile(url).then((data) => this._parse(data, { name: _.getFileName(url), icons: {} }));
 	},
