@@ -25,18 +25,11 @@ export const KMZLayer = L.KMZLayer = L.FeatureGroup.extend({
 
 	load: function(kmzUrl) {
 		L.KMZLayer._jsPromise = _.lazyLoader(this._requiredJSModules(), L.KMZLayer._jsPromise)
-			.then(() => this._load(kmzUrl));
+			.then(() => _.loadFile(kmzUrl))
+			.then((data) => this.parse(data, { name: _.getFileName(kmzUrl), icons: {} }));
 	},
 
 	parse: function(data, props) {
-		this._parse(data, props);
-	},
-
-	_load: function(url) {
-		return _.loadFile(url).then((data) => this._parse(data, { name: _.getFileName(url), icons: {} }));
-	},
-
-	_parse: function(data, props) {
 		return _.isZipped(data) ? this._parseKMZ(data, props) : this._parseKML(data, props);
 	},
 
