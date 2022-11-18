@@ -199,14 +199,11 @@
 
 		load: function(kmzUrl) {
 			L.KMZLayer._jsPromise = lazyLoader(this._requiredJSModules(), L.KMZLayer._jsPromise)
-				.then(() => this._load(kmzUrl));
+				.then(() => loadFile(kmzUrl))
+				.then((data) => this.parse(data, { name: getFileName(kmzUrl), icons: {} }));
 		},
 
-		_load: function(url) {
-			return loadFile(url).then((data) => this._parse(data, { name: getFileName(url), icons: {} }));
-		},
-
-		_parse: function(data, props) {
+		parse: function(data, props) {
 			return isZipped(data) ? this._parseKMZ(data, props) : this._parseKML(data, props);
 		},
 
@@ -236,12 +233,13 @@
 
 		_geometryToLayer: function(data, xml) {
 			var preferCanvas = this._map ? this._map.options.preferCanvas : this.options.preferCanvas;
+			var emptyIcon    = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'/%3E";
 			// parse GeoJSON
 			var layer = L.geoJson(data, {
 				pointToLayer: (feature, latlng) => {
 					if (preferCanvas) {
 						return L.kmzMarker(latlng, {
-							iconUrl: data.properties.icons[feature.properties.icon] || feature.properties.icon,
+							iconUrl: data.properties.icons[feature.properties.icon] || feature.properties.icon || emptyIcon,
 							iconSize: [28, 28],
 							iconAnchor: [14, 14],
 							interactive: this.options.interactive,
@@ -250,7 +248,7 @@
 					// TODO: handle L.svg renderer within the L.KMZMarker class?
 					return L.marker(latlng, {
 						icon: L.icon({
-							iconUrl: data.properties.icons[feature.properties.icon] || feature.properties.icon,
+							iconUrl: data.properties.icons[feature.properties.icon] || feature.properties.icon || emptyIcon,
 							iconSize: [28, 28],
 							iconAnchor: [14, 14],
 						}),
