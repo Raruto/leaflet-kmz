@@ -62,20 +62,13 @@ export const KMZLayer = L.KMZLayer = L.FeatureGroup.extend({
 
 	_geometryToLayer: function(data, xml) {
 		var preferCanvas = this._map ? this._map.options.preferCanvas : this.options.preferCanvas;
+		var emptyIcon    = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'/%3E";
 		// parse GeoJSON
 		var layer = L.geoJson(data, {
 			pointToLayer: (feature, latlng) => {
-				
-				const iconUrl = data.properties.icons[feature.properties.icon] || feature.properties.icon;
-
-				if (!iconUrl) {
-				    console.debug('Marker icon URL is missing', feature);
-				    return;
-				}
-				
 				if (preferCanvas) {
 					return L.kmzMarker(latlng, {
-						iconUrl: iconUrl,
+						iconUrl: data.properties.icons[feature.properties.icon] || feature.properties.icon || emptyIcon,
 						iconSize: [28, 28],
 						iconAnchor: [14, 14],
 						interactive: this.options.interactive,
@@ -84,7 +77,7 @@ export const KMZLayer = L.KMZLayer = L.FeatureGroup.extend({
 				// TODO: handle L.svg renderer within the L.KMZMarker class?
 				return L.marker(latlng, {
 					icon: L.icon({
-						iconUrl: iconUrl,
+						iconUrl: data.properties.icons[feature.properties.icon] || feature.properties.icon || emptyIcon,
 						iconSize: [28, 28],
 						iconAnchor: [14, 14],
 					}),
