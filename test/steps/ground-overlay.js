@@ -1,10 +1,10 @@
 const assert = require('node:assert/strict');
 const path = require('node:path');
 const { Then } = require('@cucumber/cucumber');
-const { getBrowser } = require('../hooks/browser.js');
+const { newPage } = require('../hooks/browser.js');
 
 Then('a GroundOverlay image is reprojected for Leaflet {string}', async function (version) {
-  const page = this.page = await getBrowser().newPage();
+  const page = this.page = await newPage();
   await page.setContent('<div id="map" style="width:400px;height:300px"></div>');
   const dist = `https://unpkg.com/leaflet@${version}/dist`;
   await page.addStyleTag({ url: `${dist}/leaflet.css` });

@@ -3,7 +3,7 @@ const { readFileSync, readdirSync } = require('node:fs');
 const path = require('node:path');
 const { AfterAll, Before, Then } = require('@cucumber/cucumber');
 const { startServer } = require('../../build/dev.js');
-const { getBrowser } = require('../hooks/browser.js');
+const { newPage } = require('../hooks/browser.js');
 
 const manifest = JSON.parse(readFileSync('package.json', 'utf8'));
 const pluginName = manifest.name.split('/').pop();
@@ -64,7 +64,7 @@ Then('development pages use local bundles without changing example files', async
 });
 
 Then('the example {string} loads without browser errors', { timeout: 30000 }, async function (example) {
-  const page = await getBrowser().newPage();
+  const page = await newPage();
   const errors = [];
   let googleKeyWarning = false;
   let bundleLoaded = false;

@@ -2,10 +2,10 @@ const assert = require('node:assert/strict');
 const { readFileSync } = require('node:fs');
 const path = require('node:path');
 const { Then } = require('@cucumber/cucumber');
-const { getBrowser } = require('../hooks/browser.js');
+const { newPage } = require('../hooks/browser.js');
 
 Then('the {string} KMZ bundle loads KML and KMZ with Leaflet {string}', async function (bundle, version) {
-  const page = this.page = await getBrowser().newPage();
+  const page = this.page = await newPage();
   const errors = [];
   page.on('pageerror', error => errors.push(error.message));
   const files = ['test/test-encoding.kml', 'examples/capitals.kmz'].map(file =>
