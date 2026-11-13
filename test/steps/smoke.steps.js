@@ -3,29 +3,23 @@ const { readFileSync, readdirSync } = require('node:fs');
 const path = require('node:path');
 const { AfterAll, Before, Then } = require('@cucumber/cucumber');
 const { startServer } = require('../../build/dev.js');
-const { chromium } = require('playwright');
+const { getBrowser } = require('../hooks/browser.js');
 
 const manifest = JSON.parse(readFileSync('package.json', 'utf8'));
 const pluginName = manifest.name.split('/').pop();
 const bundleName = new RegExp(`^${pluginName}(?:-src|\\.min)?\\.js$`);
 let server;
-let browser;
 let base;
 
 Before({ tags: '@smoke', timeout: 30000 }, async function () {
   if (!server) {
     server = await startServer(0);
     base = `http://127.0.0.1:${server.port}`;
-    browser = await chromium.launch();
   }
 });
 
 AfterAll(async function () {
-  try {
-    if (browser) await browser.close();
-  } finally {
-    if (server) await server.close();
-  }
+  if (server) await server.close();
 });
 
 Then('all HTML examples are listed', function () {
@@ -70,7 +64,7 @@ Then('development pages use local bundles without changing example files', async
 });
 
 Then('the example {string} loads without browser errors', { timeout: 30000 }, async function (example) {
-  const page = await browser.newPage();
+  const page = await getBrowser().newPage();
   const errors = [];
   let googleKeyWarning = false;
   let bundleLoaded = false;

@@ -1,17 +1,11 @@
 const assert = require('node:assert/strict');
 const { readFileSync } = require('node:fs');
 const path = require('node:path');
-const { chromium } = require('playwright');
-const { After, AfterAll, BeforeAll, Then, setDefaultTimeout } = require('@cucumber/cucumber');
-
-setDefaultTimeout(30000);
-let browser;
-BeforeAll(async () => { browser = await chromium.launch(); });
-After(async function () { if (this.page) await this.page.close(); });
-AfterAll(async () => { if (browser) await browser.close(); });
+const { Then } = require('@cucumber/cucumber');
+const { getBrowser } = require('../hooks/browser.js');
 
 Then('the {string} KMZ bundle loads KML and KMZ with Leaflet {string}', async function (bundle, version) {
-  const page = this.page = await browser.newPage();
+  const page = this.page = await getBrowser().newPage();
   const errors = [];
   page.on('pageerror', error => errors.push(error.message));
   const files = ['test/test-encoding.kml', 'examples/capitals.kmz'].map(file =>
