@@ -7,14 +7,14 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 
 	<!-- Leaflet (JS/CSS) -->
-	<script src="https://unpkg.com/leaflet@1.6.0/dist/leaflet-src.js"></script>
-	<script src="https://unpkg.com/leaflet-ui@0.4.5/dist/leaflet-ui-src.js"></script>
+	<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet-src.js"></script>
+	<script src="https://unpkg.com/leaflet-ui@0.8.0/dist/leaflet-ui-src.js"></script>
 
 	<!-- Leaflet-Pointable -->
-	<script src="https://unpkg.com/leaflet-pointable@0.0.4/leaflet-pointable.js"></script>
+	<script src="https://unpkg.com/leaflet-pointable@0.2.1/leaflet-pointable.js"></script>
 
 	<!-- Leaflet-KMZ -->
-	<script src="https://unpkg.com/leaflet-kmz@1.0.9/dist/leaflet-kmz-src.js"></script>
+	<script src="../dist/leaflet-kmz-src.js"></script>
 
 	<style>
 		html,
@@ -33,7 +33,7 @@
 	<div id="map" class="map"></div>
 
 	<script>
-		var map = L.map('map', {
+		let map = L.map('map', {
 			center: [43.5978, 12.7059],
 			zoom: 5,
 			mapTypeId: 'topo',
@@ -44,29 +44,29 @@
 			fullscreenControl: false,
 			preferCanvas: true,
 			plugins: [
-				"geojson-vt@3.2.1/geojson-vt.js",
+				"geojson-vt@4.0.2/geojson-vt.js",
 				"leaflet.vectorgrid@1.3.0/dist/Leaflet.VectorGrid.js"
 			]
 		});
 
 		map.on('plugins_loaded', function() {
 
-			var control = L.control.layers(null, null, {
+			let control = L.control.layers(null, null, {
 				collapsed: false
 			}).addTo(map);
 
 			// Instantiate KMZ parser (async)
-			var kmz = L.kmzLayer(null, {
+			let kmz = L.kmzLayer(null, {
 				interactive: true, // Disable default "leaflet.js" mouse layer interactions.
 				// pointable: true,
 				tiled: true,
-				geometryToLayer: function(data) {
-					var layer = L.featureGroup();
-					var points = [];
-					var overlays = [];
-					var options = L.extend({}, this.options, data.properties);
+				geometryToLayer(data) {
+					let layer = L.featureGroup();
+					let points = [];
+					let overlays = [];
+					let options = L.extend({}, this.options, data.properties);
 
-					var geojson = L.geoJson(data, {
+					let geojson = L.geoJson(data, {
 						pointToLayer: (feature, latlng) =>
 							L.kmzMarker(latlng, {
 								iconUrl: data.properties.icons[feature.properties.icon],
@@ -75,8 +75,8 @@
 								interactive: this.options.interactive,
 							}),
 						style: (feature) => {
-							var styles = {};
-							var prop = feature.properties;
+							let styles = {};
+							let prop = feature.properties;
 
 							if (this.options.tiled) {
 								return {
@@ -120,9 +120,9 @@
 
 							if (!this.options.ballon) return;
 
-							var prop = feature.properties;
-							var name = prop.name || "";
-							var desc = prop.description || "";
+							let prop = feature.properties;
+							let name = prop.name || "";
+							let desc = prop.description || "";
 
 							if (name || desc) {
 								if (this.options.bindPopup) {
@@ -141,10 +141,7 @@
 
 					if (this.options.tiled) {
 
-						// Prevent leaflet from treating vector canvas points as real markers
-						PointSymbolizer.prototype.getLatLng = null;
-
-						var vectorOptions = {
+						let vectorOptions = {
 							maxZoom: 24,
 							extent: 4096,
 							buffer: 256,
@@ -152,7 +149,7 @@
 							rendererFactory: L.canvas.tile,
 							vectorTileLayerStyles: {
 								sliced: (prop, zoom) => {
-									var styles = {};
+									let styles = {};
 
 									if (prop.icon) {
 										styles.icon = L.icon({

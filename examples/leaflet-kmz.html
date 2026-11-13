@@ -7,17 +7,17 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 
 	<!-- Leaflet (JS/CSS) -->
-	<link rel="stylesheet" href="https://unpkg.com/leaflet@1.6.0/dist/leaflet.css">
-	<script src="https://unpkg.com/leaflet@1.6.0/dist/leaflet.js"></script>
+	<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+	<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
 	<!-- JSZIP -->
-	<!-- <script src="https://unpkg.com/jszip@3.5.0/dist/jszip.min.js"></script> -->
+	<!-- <script src="https://unpkg.com/jszip@3.10.1/dist/jszip.min.js"></script> -->
 
 	<!-- @tmcw/togeojson -->
 	<!-- <script src="https://unpkg.com/@tmcw/togeojson@4.1.0/dist/togeojson.umd.js"></script> -->
 
 	<!-- Leaflet-KMZ -->
-	<script src="https://unpkg.com/leaflet-kmz@1.0.9/dist/leaflet-kmz-src.js"></script>
+	<script src="../dist/leaflet-kmz-src.js"></script>
 
 	<style>
 		html,
@@ -36,10 +36,10 @@
 	<div id="map" class="map"></div>
 
 	<script>
-	  var map = L.map('map');
+		let map = L.map('map');
 	  map.setView(new L.LatLng(43.5978, 12.7059), 5);
 
-	  var OpenTopoMap = L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
+	  let OpenTopoMap = L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
 	    maxZoom: 17,
 	    attribution: 'Map data: &copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>, <a href="http://viewfinderpanoramas.org">SRTM</a> | Map style: &copy; <a href="https://opentopomap.org">OpenTopoMap</a> (<a href="https://creativecommons.org/licenses/by-sa/3.0/">CC-BY-SA</a>)',
 	    opacity: 0.90
@@ -47,7 +47,7 @@
 	  OpenTopoMap.addTo(map);
 
 		// Instantiate KMZ layer (async)
-		var kmz = L.kmzLayer().addTo(map);
+		let kmz = L.kmzLayer().addTo(map);
 
 		kmz.on('load', function(e) {
 			control.addOverlay(e.layer, e.name);
@@ -55,12 +55,12 @@
 		});
 
 		// Add remote KMZ files as layers (NB if they are 3rd-party servers, they MUST have CORS enabled)
-		kmz.load('https://raruto.github.io/leaflet-kmz/examples/regions.kmz');
-		kmz.load('https://raruto.github.io/leaflet-kmz/examples/capitals.kmz');
-		kmz.load('https://raruto.github.io/leaflet-kmz/examples/globe.kmz');
-		kmz.load('https://raruto.github.io/leaflet-kmz/examples/etna.kmz');
+		kmz.load('regions.kmz');
+		kmz.load('capitals.kmz');
+		kmz.load('globe.kmz');
+		kmz.load('etna.kmz');
 
-	  var control = L.control.layers(null, null, { collapsed:false }).addTo(map);
+	  let control = L.control.layers(null, null, { collapsed:false }).addTo(map);
 	</script>
 
 	<a href="https://github.com/Raruto/leaflet-kmz" class="view-on-github" style="position: fixed;top: 10px;left: calc(50% - 60px);z-index: 9999;" > <img alt="View on Github" src="https://raruto.github.io/img/view-on-github.png" title="View on Github" width="163"> </a>

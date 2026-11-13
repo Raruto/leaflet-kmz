@@ -5,14 +5,14 @@
  * @link https://stackoverflow.com/a/43019740
  *
  */
-L.KMZMarker = L.CircleMarker.extend({
-	// initialize: function(latlng, options) {
+const kmzMarkerMethods = {
+	// initialize(latlng, options) {
 	// 	L.CircleMarker.prototype.initialize.call(this, latlng, options);
 	// },
-	_updatePath: function() {
-		var renderer = this._renderer;
-		var icon = this._icon;
-		var layer = this;
+	_updatePath() {
+		const renderer = this._renderer;
+		let icon = this._icon;
+		const layer = this;
 
 		if (!renderer._drawing || layer._empty()) {
 			return;
@@ -25,8 +25,8 @@ L.KMZMarker = L.CircleMarker.extend({
 			icon = this._icon = new Image(this.options.iconSize[0], this.options.iconSize[1]);
 			icon.anchor = [icon.width / 2.0, icon.height / 2.0];
 			icon.onload = icon.drawImage = () => {
-				var p = layer._point.subtract(icon.anchor);
-				var ctx = renderer._ctx;
+				const p = layer._point.subtract(icon.anchor);
+				const ctx = renderer._ctx;
 
 				ctx.drawImage(icon, p.x, p.y, icon.width, icon.height);
 
@@ -37,10 +37,17 @@ L.KMZMarker = L.CircleMarker.extend({
 			icon.src = this.options.iconUrl;
 		}
 	}
-});
+};
+
+if (L.version.startsWith('1.')) {
+	L.KMZMarker = L.CircleMarker.extend(kmzMarkerMethods);
+} else {
+	L.KMZMarker = class extends L.CircleMarker {};
+	L.KMZMarker.include(kmzMarkerMethods);
+}
 
 L.kmzMarker = function(ll, opts) {
 	return new L.KMZMarker(ll, opts);
 };
 
-export var KMZMarker = L.KMZMarker;
+export const KMZMarker = L.KMZMarker;

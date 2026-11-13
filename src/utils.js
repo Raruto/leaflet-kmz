@@ -40,7 +40,7 @@ export function getFileName(url) {
 }
 
 export function getMimeType(filename, ext) {
-	var mime = 'text/plain';
+	let mime = 'text/plain';
 	if (/\.(jpe?g|png|gif|bmp)$/i.test(filename)) {
 		mime = 'image/' + ext;
 	} else if (/\.kml$/i.test(filename)) {
@@ -80,7 +80,7 @@ export function loadJS(url) {
 }
 
 export function parseLatLonBox(xml) {
-	let box = L.latLngBounds([
+	let box = new L.LatLngBounds([
 		xml.getElementsByTagName('south')[0].childNodes[0].nodeValue,
 		xml.getElementsByTagName('west')[0].childNodes[0].nodeValue
 	], [
@@ -117,19 +117,19 @@ export function parseGroundOverlay(xml, props) {
 }
 
 export function toGeoJSON(data, props) {
-	var xml = data instanceof XMLDocument ? data : toXML(data);
-	var json = window.toGeoJSON.kml(xml);
-	json.properties = L.extend({}, json.properties, props || {});
+	const xml = data instanceof XMLDocument ? data : toXML(data);
+	const json = window.toGeoJSON.kml(xml);
+	json.properties = Object.assign({}, json.properties, props || {});
 	return json;
 }
 
 export function toXML(data) {
-	var text = data;
+	let text = data;
 	if (data instanceof ArrayBuffer) {
 		text = new Uint8Array(data).reduce(function (data, byte) {
 			return data + String.fromCharCode(byte);
 		}, '');
-		var encoding = text.substring(0, text.indexOf("?>")).match(/encoding\s*=\s*["'](.*)["']/i);
+		const encoding = text.substring(0, text.indexOf("?>")).match(/encoding\s*=\s*["'](.*)["']/i);
 		if (encoding) {
 			text = new TextDecoder(encoding[1]).decode(data);
 		}
@@ -143,12 +143,12 @@ export function unzip(folder) {
 			.then((zip) => {
 
 				// Parse KMZ files.
-				var files = Object.keys(zip.files)
+				const files = Object.keys(zip.files)
 					.map((name) => {
-						var entry = zip.files[name];
+						const entry = zip.files[name];
 						if (isImageFile(name)) {
-							var ext = getFileExt(name);
-							var mime = getMimeType(name, ext);
+							const ext = getFileExt(name);
+							const mime = getMimeType(name, ext);
 							return entry
 								.async("base64")
 								.then((value) => [name, 'data:' + mime + ';base64,' + value]);

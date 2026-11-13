@@ -1,6 +1,6 @@
 import * as _ from './utils';
 
-export const KMZLayer = L.KMZLayer = L.FeatureGroup.extend({
+const kmzLayerMethods = {
 	options: {
 		interactive: true,
 		ballon: true,
@@ -9,36 +9,36 @@ export const KMZLayer = L.KMZLayer = L.FeatureGroup.extend({
 		preferCanvas: false,
 	},
 
-	initialize: function(kmzUrl, options) {
-		L.extend(this.options, options);
+	_initializeKMZ(kmzUrl, options) {
+		L.Util.setOptions(this, options);
 
-		if (L.Browser.mobile) this.options.bindTooltip = false;
+		if (L.Browser && L.Browser.mobile) this.options.bindTooltip = false;
 
 		this._layers = {};
 
 		if (kmzUrl) this.load(kmzUrl);
 	},
 
-	add: function(kmzUrl) {
+	add(kmzUrl) {
 		this.load(kmzUrl);
 	},
 
-	load: function(kmzUrl) {
+	load(kmzUrl) {
 		L.KMZLayer._jsPromise = _.lazyLoader(this._requiredJSModules(), L.KMZLayer._jsPromise)
 			.then(() => _.loadFile(kmzUrl))
 			.then((data) => this.parse(data, { name: _.getFileName(kmzUrl), icons: {} }));
 	},
 
-	parse: function(data, props) {
+	parse(data, props) {
 		return _.isZipped(data) ? this._parseKMZ(data, props) : this._parseKML(data, props);
 	},
 
-	_parseKMZ: function(data, props) {
+	_parseKMZ(data, props) {
 		_.unzip(data).then((kmzFiles) => {
-			var kmlDoc = _.getKmlDoc(kmzFiles);
-			var images = _.getImageFiles(Object.keys(kmzFiles));
+			const kmlDoc = _.getKmlDoc(kmzFiles);
+			const images = _.getImageFiles(Object.keys(kmzFiles));
 
-			var kmlString = kmzFiles[kmlDoc];
+			const kmlString = kmzFiles[kmlDoc];
 			// cache all images with their base64 encoding
 			props.icons = images.reduce((obj, item) => {
 				obj[item] = kmzFiles[item];
@@ -49,19 +49,19 @@ export const KMZLayer = L.KMZLayer = L.FeatureGroup.extend({
 		});
 	},
 
-	_parseKML: function(data, props) {
-		var xml = _.toXML(data, props);
-		var geojson = _.toGeoJSON(xml, props);
-		var layer = (this.options.geometryToLayer || this._geometryToLayer).call(this, geojson, xml);
+	_parseKML(data, props) {
+		const xml = _.toXML(data, props);
+		const geojson = _.toGeoJSON(xml, props);
+		const layer = (this.options.geometryToLayer || this._geometryToLayer).call(this, geojson, xml);
 		this.addLayer(layer);
 		this.fire('load', { layer: layer, name: geojson.properties.name });
 	},
 
-	_geometryToLayer: function(data, xml) {
-		var preferCanvas = this._map ? this._map.options.preferCanvas : this.options.preferCanvas;
-		var emptyIcon    = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'/%3E";
+	_geometryToLayer(data, xml) {
+		const preferCanvas = this._map ? this._map.options.preferCanvas : this.options.preferCanvas;
+		const emptyIcon    = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'/%3E";
 		// parse GeoJSON
-		var layer = L.geoJson(data, {
+		const layer = new L.GeoJSON(data, {
 			pointToLayer: (feature, latlng) => {
 				if (preferCanvas) {
 					return L.kmzMarker(latlng, {
@@ -72,8 +72,8 @@ export const KMZLayer = L.KMZLayer = L.FeatureGroup.extend({
 					});
 				}
 				// TODO: handle L.svg renderer within the L.KMZMarker class?
-				return L.marker(latlng, {
-					icon: L.icon({
+				return new L.Marker(latlng, {
+					icon: new L.Icon({
 						iconUrl: data.properties.icons[feature.properties.icon] || feature.properties.icon || emptyIcon,
 						iconSize: [28, 28],
 						iconAnchor: [14, 14],
@@ -82,8 +82,8 @@ export const KMZLayer = L.KMZLayer = L.FeatureGroup.extend({
 				});
 			},
 			style: (feature) => {
-				var styles = {};
-				var prop = feature.properties;
+				const styles = {};
+				const prop = feature.properties;
 
 				if (prop.stroke) {
 					styles.stroke = true;
@@ -108,9 +108,9 @@ export const KMZLayer = L.KMZLayer = L.FeatureGroup.extend({
 			onEachFeature: (feature, layer) => {
 				if (!this.options.ballon) return;
 
-				var prop = feature.properties;
-				var name = prop.name || "";
-				var desc = prop.description || "";
+				const prop = feature.properties;
+				const name = prop.name || "";
+				const desc = prop.description || "";
 
 				if (name || desc) {
 					if (this.options.bindPopup) {
@@ -127,7 +127,7 @@ export const KMZLayer = L.KMZLayer = L.FeatureGroup.extend({
 			interactive: this.options.interactive,
 		});
 		// parse GroundOverlays
-		let el = xml.getElementsByTagName('GroundOverlay');
+		const el = xml.getElementsByTagName('GroundOverlay');
 		for (let l, k = 0; k < el.length; k++) {
 			l = _.parseGroundOverlay(el[k], data.properties);
 			if (l) {
@@ -137,12 +137,12 @@ export const KMZLayer = L.KMZLayer = L.FeatureGroup.extend({
 		return layer;
 	},
 
-	_requiredJSModules: function() {
-		var urls = [];
-		var host = 'https://unpkg.com/';
+	_requiredJSModules() {
+		const urls = [];
+		const host = 'https://unpkg.com/';
 
 		if (typeof window.JSZip !== 'function') {
-			urls.push(host + 'jszip@3.5.0/dist/jszip.min.js');
+			urls.push(host + 'jszip@3.10.1/dist/jszip.min.js');
 		}
 		if (typeof window.toGeoJSON !== 'object') {
 			urls.push(host + '@tmcw/togeojson@4.1.0/dist/togeojson.umd.js');
@@ -150,7 +150,23 @@ export const KMZLayer = L.KMZLayer = L.FeatureGroup.extend({
 
 		return urls;
 	},
-});
+};
+
+let KMZLayer;
+if (L.version.startsWith('1.')) {
+	kmzLayerMethods.initialize = kmzLayerMethods._initializeKMZ;
+	KMZLayer = L.FeatureGroup.extend(kmzLayerMethods);
+} else {
+	KMZLayer = class extends L.FeatureGroup {
+		constructor(url, options) {
+			super();
+			this._initializeKMZ(url, options);
+		}
+	};
+	KMZLayer.include(kmzLayerMethods);
+}
+L.KMZLayer = KMZLayer;
+export { KMZLayer };
 
 L.kmzLayer = function(url, options) {
 	return new L.KMZLayer(url, options);
