@@ -24,7 +24,8 @@ const kmzLayerMethods = {
 	},
 
 	load(kmzUrl) {
-		L.KMZLayer._jsPromise = _.lazyLoader(this._requiredJSModules(), L.KMZLayer._jsPromise)
+		L.KMZLayer._jsPromise = _.lazyLoader(this._requiredJSModules(), L.KMZLayer._jsPromise);
+		return L.KMZLayer._jsPromise
 			.then(() => _.loadFile(kmzUrl))
 			.then((data) => this.parse(data, { name: _.getFileName(kmzUrl), icons: {} }));
 	},
@@ -34,8 +35,9 @@ const kmzLayerMethods = {
 	},
 
 	_parseKMZ(data, props) {
-		_.unzip(data).then((kmzFiles) => {
+		return _.unzip(data).then((kmzFiles) => {
 			const kmlDoc = _.getKmlDoc(kmzFiles);
+			if (!kmlDoc) throw new Error('KMZ archive contains no KML document');
 			const images = _.getImageFiles(Object.keys(kmzFiles));
 
 			const kmlString = kmzFiles[kmlDoc];
@@ -141,9 +143,6 @@ const kmzLayerMethods = {
 		const urls = [];
 		const host = 'https://unpkg.com/';
 
-		if (typeof window.JSZip !== 'function') {
-			urls.push(host + 'jszip@3.10.1/dist/jszip.min.js');
-		}
 		if (typeof window.toGeoJSON !== 'object') {
 			urls.push(host + '@tmcw/togeojson@4.1.0/dist/togeojson.umd.js');
 		}

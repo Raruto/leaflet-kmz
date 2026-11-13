@@ -7,7 +7,6 @@
   "scripts": {
     "test": "npm run build && cucumber-js",
     "build": "node build/build.js",
-    "watch": "node build/dev.js",
     "dev": "node build/dev.js",
     "preversion": "node build/version.js",
     "version": "npm run build && git add -A",
@@ -22,7 +21,6 @@
     "kmz",
     "javascript",
     "leaflet-and-kmz",
-    "jszip",
     "togeojson",
     "geojson-vt",
     "mapbox"
@@ -42,7 +40,6 @@
     "leaflet": "^1.9.4 || ^2.0.0-beta.3"
   },
   "dependencies": {
-    "@tmcw/togeojson": "^3.2.0",
-    "jszip": "^3.10.1"
+    "@tmcw/togeojson": "^3.2.0"
   }
 }

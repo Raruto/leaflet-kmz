@@ -72,6 +72,9 @@ _For a working example see one of the following demos:_
 
 **Notes:**
 - supported file formats: **.kmz**, **.kml**
+- KMZ extraction uses native `DecompressionStream('deflate-raw')` (current Chrome, Edge, Firefox and Safari); no ZIP library or download is required. Plain KML does not require this API.
+- Supported archives: single-volume ZIP32 with stored or DEFLATE entries and UTF-8 filenames, including data descriptors. ZIP64, encrypted and multi-volume archives are rejected.
+- `load(url)` and `parse(kmzArrayBuffer, props)` return promises that reject on archive or decompression errors. Handle these rejections with `await`/`catch`.
 - to be able to use Google files (eg. through Google My Maps) you **MUST** use a valid third-party kml proxy server
 
 ---
@@ -79,7 +82,6 @@ _For a working example see one of the following demos:_
 **Compatible with:**
 [![Leaflet 1.9.4](https://img.shields.io/badge/Leaflet-1.9.4-1EB300.svg?style=flat)](https://leafletjs.com/reference.html)
 [![Leaflet 2.0.0-beta.3](https://img.shields.io/badge/Leaflet-2.0.0--beta.3-1EB300.svg?style=flat)](https://leafletjs.com/reference.html)
-[![JSZip v3](https://img.shields.io/badge/@tmcw/togeojson-3.2.0-1EB300.svg?style=flat)](https://www.npmjs.com/package/jszip)
 [![@tmcw/togeojson v4](https://img.shields.io/badge/@tmcw/togeojson-4.1.0-1EB300.svg?style=flat)](https://www.npmjs.com/package/@tmcw/togeojson)
 
 ---

@@ -1,4 +1,3 @@
-// import JSZip from 'jszip';
 // import * as toGeoJSON from '@tmcw/togeojson';
 
 export function loadFile(url) {
@@ -137,34 +136,95 @@ export function toXML(data) {
 	return text ? (new DOMParser()).parseFromString(text, 'text/xml') : document.implementation.createDocument(null, "kml");;
 }
 
-export function unzip(folder) {
-	return new Promise((resolve, reject) => {
-		window.JSZip.loadAsync(folder)
-			.then((zip) => {
-
-				// Parse KMZ files.
-				const files = Object.keys(zip.files)
-					.map((name) => {
-						const entry = zip.files[name];
-						if (isImageFile(name)) {
-							const ext = getFileExt(name);
-							const mime = getMimeType(name, ext);
-							return entry
-								.async("base64")
-								.then((value) => [name, 'data:' + mime + ';base64,' + value]);
-						}
-						return entry
-							.async("text")
-							.then((value) => [name, value]); // [ fileName, stringValue ]
-					});
-
-				// Return KMZ files.
-				Promise.all(files).then((list) =>
-					resolve(list.reduce((obj, item) => {
-						obj[item[0]] = item[1]; // { fileName: stringValue }
-						return obj;
-					}, {}))
-				);
-			});
-	});
+/**
+ * Read a single-volume ZIP32 KMZ using the central directory.
+ *
+ * @param {ArrayBuffer|Uint8Array|Blob} folder ZIP archive.
+ * @returns {Promise<Object<string, string>>} Text files and image data URLs.
+ * @throws {Error} If the archive is invalid or uses an unsupported ZIP feature.
+ */
+export async function unzip(folder) {
+	const bytes = new Uint8Array(await new Response(folder).arrayBuffer());
+	const view = new DataView(bytes.buffer);
+	let end = bytes.length - 22;
+	const first = Math.max(0, end - 65535);
+	for (; end >= first; end--) {
+		if (view.getUint32(end, true) === 0x06054b50 &&
+			end + 22 + view.getUint16(end + 20, true) === bytes.length) break;
+	}
+	if (end < first) throw new Error('Invalid ZIP: end of central directory not found');
+	const count = view.getUint16(end + 10, true);
+	const size = view.getUint32(end + 12, true);
+	let offset = view.getUint32(end + 16, true);
+	if (count === 0xffff || size === 0xffffffff || offset === 0xffffffff) {
+		throw new Error('ZIP64 archives are not supported');
+	}
+	if (view.getUint16(end + 4, true) || view.getUint16(end + 6, true) ||
+		view.getUint16(end + 8, true) !== count) {
+		throw new Error('Multi-volume ZIP archives are not supported');
+	}
+	const directory = offset;
+	const limit = offset + size;
+	if (limit !== end) throw new Error('Invalid ZIP: central directory bounds');
+	const files = Object.create(null);
+	const decoder = new TextDecoder();
+	for (let index = 0; index < count; index++) {
+		if (offset + 46 > limit || view.getUint32(offset, true) !== 0x02014b50) {
+			throw new Error('Invalid ZIP: central directory entry');
+		}
+		const flags = view.getUint16(offset + 8, true);
+		const method = view.getUint16(offset + 10, true);
+		const compressed = view.getUint32(offset + 20, true);
+		const uncompressed = view.getUint32(offset + 24, true);
+		const nameLength = view.getUint16(offset + 28, true);
+		const extraLength = view.getUint16(offset + 30, true);
+		const commentLength = view.getUint16(offset + 32, true);
+		const disk = view.getUint16(offset + 34, true);
+		const local = view.getUint32(offset + 42, true);
+		const next = offset + 46 + nameLength + extraLength + commentLength;
+		if (compressed === 0xffffffff || uncompressed === 0xffffffff || local === 0xffffffff || disk === 0xffff) {
+			throw new Error('ZIP64 archives are not supported');
+		}
+		if (disk) throw new Error('Multi-volume ZIP archives are not supported');
+		if (flags & 0x41) throw new Error('Encrypted ZIP entries are not supported');
+		if (method !== 0 && method !== 8) throw new Error('Unsupported ZIP compression method: ' + method);
+		if (next > limit || local + 30 > directory || view.getUint32(local, true) !== 0x04034b50) {
+			throw new Error('Invalid ZIP: entry bounds or local header');
+		}
+		const localNameLength = view.getUint16(local + 26, true);
+		const start = local + 30 + localNameLength + view.getUint16(local + 28, true);
+		if (start + compressed > directory || localNameLength !== nameLength ||
+			view.getUint16(local + 6, true) !== flags || view.getUint16(local + 8, true) !== method) {
+			throw new Error('Invalid ZIP: local entry does not match central directory');
+		}
+		for (let i = 0; i < nameLength; i++) {
+			if (bytes[local + 30 + i] !== bytes[offset + 46 + i]) {
+				throw new Error('Invalid ZIP: local filename does not match central directory');
+			}
+		}
+		const name = decoder.decode(bytes.subarray(offset + 46, offset + 46 + nameLength));
+		let content = bytes.subarray(start, start + compressed);
+		if (method === 8) {
+			if (typeof DecompressionStream !== 'function') {
+				throw new Error('KMZ decompression requires DecompressionStream with deflate-raw support');
+			}
+			const stream = new Blob([content]).stream().pipeThrough(new DecompressionStream('deflate-raw'));
+			content = new Uint8Array(await new Response(stream).arrayBuffer());
+		}
+		if (content.length !== uncompressed) throw new Error('Invalid ZIP: uncompressed size mismatch');
+		if (!name.endsWith('/')) {
+			if (isImageFile(name)) {
+				let binary = '';
+				for (let i = 0; i < content.length; i += 8192) {
+					binary += String.fromCharCode(...content.subarray(i, i + 8192));
+				}
+				files[name] = 'data:' + getMimeType(name, getFileExt(name)) + ';base64,' + btoa(binary);
+			} else {
+				files[name] = decoder.decode(content);
+			}
+		}
+		offset = next;
+	}
+	if (offset !== limit) throw new Error('Invalid ZIP: central directory size mismatch');
+	return files;
 }

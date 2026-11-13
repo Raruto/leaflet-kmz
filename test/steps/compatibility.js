@@ -24,7 +24,6 @@ Then('the {string} KMZ bundle loads KML and KMZ with Leaflet {string}', async fu
   const dist = `https://unpkg.com/leaflet@${version}/dist`;
   await page.addStyleTag({ url: `${dist}/leaflet.css` });
   await page.addScriptTag({ url: `${dist}/${version === '1.9.4' ? 'leaflet.js' : 'leaflet-global.js'}` });
-  await page.addScriptTag({ path: require.resolve('jszip/dist/jszip.min.js') });
   await page.addScriptTag({ path: require.resolve('@tmcw/togeojson/dist/togeojson.umd.js') });
   const bundlePath = path.join(__dirname, '..', '..', 'dist', `leaflet-kmz${bundle === 'readable' ? '-src' : ''}.js`);
   await page.addScriptTag({ path: bundlePath });
@@ -32,6 +31,14 @@ Then('the {string} KMZ bundle loads KML and KMZ with Leaflet {string}', async fu
     const map = new (L.LeafletMap || L.Map)('map', { center: [0, 0], zoom: 2 });
     const layer = L.kmzLayer(null, { bindPopup: false }).addTo(map);
     const other = L.kmzLayer();
+    const empty = new Uint8Array(22);
+    empty.set([0x50, 0x4b, 0x05, 0x06]);
+    let archiveError;
+    try {
+      await layer.parse(empty.buffer, { name: 'empty.kmz', icons: {} });
+    } catch (error) {
+      archiveError = error.message;
+    }
     const loaded = [];
     let canvasMarker = false;
     for (const file of ['test.kml', 'capitals.kmz']) {
@@ -41,13 +48,14 @@ Then('the {string} KMZ bundle loads KML and KMZ with Leaflet {string}', async fu
         if (file.endsWith('.kmz')) canvasMarker = layers.some(item => item instanceof L.KMZMarker);
         resolve(layers.length);
       }));
-      layer.load(`https://fixture.invalid/${file}`);
+      await layer.load(`https://fixture.invalid/${file}`);
       loaded.push(await done);
     }
     const overlay = new L.KMZImageOverlay('data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg"/%3E',
       new L.LatLngBounds([0, 0], [1, 1]), { angle: 30 }).addTo(map);
     const result = {
-      version: L.version, loaded, groups: layer.getLayers().length,
+      version: L.version, loaded, groups: layer.getLayers().length, archiveError,
+      zipLibrary: typeof window.JSZip,
       defaultPopup: other.options.bindPopup, canvasMarker,
       rotation: overlay.getElement().style.transform.includes('rotate(30deg)'),
       exports: window['leaflet-kmz'].KMZLayer === L.KMZLayer,
@@ -56,6 +64,8 @@ Then('the {string} KMZ bundle loads KML and KMZ with Leaflet {string}', async fu
     return result;
   });
   assert.equal(result.version, version);
+  assert.equal(result.archiveError, 'KMZ archive contains no KML document');
+  assert.equal(result.zipLibrary, 'undefined');
   assert.equal(result.loaded[0], 3);
   assert.ok(result.loaded[1] > 0);
   assert.equal(result.groups, 2);
