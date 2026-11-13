@@ -24,7 +24,7 @@ _For a working example see one of the following demos:_
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <!-- Leaflet-KMZ -->
-    <script src="https://unpkg.com/leaflet-kmz@1.1.0/dist/leaflet-kmz.js"></script>
+    <script src="https://unpkg.com/leaflet-kmz@1.1.1/dist/leaflet-kmz.js"></script>
     ...
     </head>
     ```
