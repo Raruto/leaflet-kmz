@@ -82,7 +82,7 @@ _For a working example see one of the following demos:_
 **Compatible with:**
 [![Leaflet 1.9.4](https://img.shields.io/badge/Leaflet-1.9.4-1EB300.svg?style=flat)](https://leafletjs.com/reference.html)
 [![Leaflet 2.0.0-beta.3](https://img.shields.io/badge/Leaflet-2.0.0--beta.3-1EB300.svg?style=flat)](https://leafletjs.com/reference.html)
-[![@tmcw/togeojson v4](https://img.shields.io/badge/@tmcw/togeojson-4.1.0-1EB300.svg?style=flat)](https://www.npmjs.com/package/@tmcw/togeojson)
+[![@tmcw/togeojson v7](https://img.shields.io/badge/@tmcw/togeojson-7.1.3-1EB300.svg?style=flat)](https://www.npmjs.com/package/@tmcw/togeojson)
 
 ---
 

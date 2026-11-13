@@ -24,7 +24,7 @@ Then('the {string} KMZ bundle loads KML and KMZ with Leaflet {string}', async fu
   const dist = `https://unpkg.com/leaflet@${version}/dist`;
   await page.addStyleTag({ url: `${dist}/leaflet.css` });
   await page.addScriptTag({ url: `${dist}/${version === '1.9.4' ? 'leaflet.js' : 'leaflet-global.js'}` });
-  await page.addScriptTag({ path: require.resolve('@tmcw/togeojson/dist/togeojson.umd.js') });
+  await page.addScriptTag({ path: path.join(path.dirname(require.resolve('@tmcw/togeojson')), 'togeojson.umd.js') });
   const bundlePath = path.join(__dirname, '..', '..', 'dist', `leaflet-kmz${bundle === 'readable' ? '-src' : ''}.js`);
   await page.addScriptTag({ path: bundlePath });
   const result = await page.evaluate(async () => {

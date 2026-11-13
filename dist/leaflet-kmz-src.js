@@ -351,7 +351,7 @@ var kmzLayerMethods = {
     const urls = [];
     const host = "https://unpkg.com/";
     if (typeof window.toGeoJSON !== "object") {
-      urls.push(host + "@tmcw/togeojson@4.1.0/dist/togeojson.umd.js");
+      urls.push(host + "@tmcw/togeojson@7.1.3/dist/togeojson.umd.js");
     }
     return urls;
   }

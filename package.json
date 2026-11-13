@@ -40,6 +40,6 @@
     "leaflet": "^1.9.4 || ^2.0.0-beta.3"
   },
   "dependencies": {
-    "@tmcw/togeojson": "^3.2.0"
+    "@tmcw/togeojson": "^7.1.3"
   }
 }
